@@ -1,71 +1,60 @@
+# standard library
+import os
+from typing import Any
+
+# imported packages
 import torch
 import torchvision
 import torchvision.datasets as datasets
 from torchvision import transforms
-
 import numpy as np
-
 import matplotlib.pyplot as plt
 from PIL import Image
 import imageio
+from IPython.display import Image as ImageDisplay
+from IPython.display import display
 
-import os
+# local imports
+import augmentations
+from augmentations import Variation
 
-from enum import Enum
+def create_gif(images, filepath):
+    frames = images.squeeze(0)
+    frames_to_pil = [transforms.ToPILImage()(frame) for frame in frames]
+    imageio.mimsave(filepath, frames_to_pil, fps=20)
 
-class Variation(Enum):
-    ZoomIn = "zoom_in"
-    ZoomOut = "zoom_out"
-    Rotating = "rotating"
-    
+class MNISTVideo(datasets.vision.VisionDataset):
+    def __init__(self, video_filepath, label_filepath): 
+        self.video_filepath = video_filepath
+        self.label_filepath = label_filepath
 
-class MNISTVideoDataset:
-    def __init__(self, mnist):
-        self.mnist = mnist
+        # load the data
+        self.data = np.load(video_filepath)
+        self.labels = np.load(label_filepath)
 
-    def zoom_out(tensor_img, steps=20, zoom=0.95):
-        """Generate zoom out video of n frames from an original image.
+    def __getitem__(self, index: int) -> Any:
+        video, label = self.data[index], int(self.labels[index])
+        return video, label
 
-        :param tensor_img: the original image
-        :type tensor_img: torch.Tensor
-        :param steps: number of frames, defaults to 20
-        :type steps: int, optional
-        :param zoom: the zoom magnitude per step, defaults to 0.95
-        :type zoom: float, optional
-        """        
-        frames = []
-        for step in range(steps):
-            # Calculate new size and padding
-            current_size = [
-                int(tensor_img.size(1) * (zoom**step)),
-                int(tensor_img.size(2) * (zoom**step)),
-            ]
-            padding = [
-                tensor_img.size(1) - current_size[0],
-                tensor_img.size(2) - current_size[1],
-            ]
+    def __len__(self) -> int:
+        return len(self.data) 
 
-            # Resize the image
-            resized_img = transforms.functional.resize(tensor_img, current_size)
+if __name__ == "__main__":
+    video_filepath = ''
+    label_filepath = ''
 
-            # Pad the image
-            padded_img = transforms.functional.pad(
-                resized_img,
-                padding[1] // 2,
-                padding[0] // 2,
-                padding[1] - padding[1] // 2,
-                padding[0] - padding[0] // 2,
-                padding_mode="constant",
-                fill=0,
-            )
+    # load the data as a torchvision dataset
+    data = MNISTVideo(video_filepath=video_filepath, label_filepath=label_filepath)
 
-            # Add the padded image to the the list of new frames
-            frames.append(padded_img)
+    # load with data loader
+    train_loader = torch.utils.data.DataLoader(data, batch_size=1, shuffle=True)
+    dataiter = iter(train_loader)
 
-        return frames
+    # get a sample
+    images, labels = next(dataiter)
 
-    def zoom_in():
-        pass
-
-    def create_dataset():
+    # create, save, and display gif of the sample
+    gif_filepath = 'sample.gif'
+    create_gif(images, gif_filepath)
+    display(ImageDisplay(filename=gif_filepath))
 
