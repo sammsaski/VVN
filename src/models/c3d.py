@@ -1,35 +1,63 @@
 import torch
 import torch.nn as nn
 import lightning as L
+from torchmetrics.classification import Accuracy
 
+# modified from https://github.com/jfzhang95/pytorch-video-recognition/blob/master/network/C3D_model.py
 class C3D(L.LightningModule):
-    def __init__(self, img_res=64, num_frames=10, num_classes=10):
+    """
+    The C3D network.
+
+    conv1   in:10*3*64*64    out:10*64*64*64
+    pool1   in:10*64*32*32   out:10*64*32*32
+
+    conv2   in:10*64*32*32   out:10*128*32*32
+    pool2   in:10*128*32*32  out:5*128*16*16
+
+    conv3a  in:5*128*16*16   out:5*256*16*16
+    conv3b  in:5*256*16*16   out:5*256*16*16
+    pool3   in:5*256*16*16   out:2*256*8*8
+
+    conv4a  in:2*256*8*8     out:2*512*8*8
+    conv4b  in:2*512*8*8     out:2*512*8*8
+    pool4   in:2*512*8*8     out:1*512*4*4
+
+    conv5a  in:1*512*4*4     out:1*512*4*4
+    conv5b  in:1*512*4*4     out:1*512*4*4
+    pool5   in:1*512*4*4     out:1*512*3*3
+
+    fc6     in:512*3*3       out:256*3*3
+    fc7     in:256*3*3       out:256*3*3
+    fc8     in:256*3*3       out:num_classes
+    """
+    def __init__(self, img_res=32, num_frames=8, num_classes=10):
         super().__init__()
 
-        self.example_input_array = torch.Tensor(1, 1, 20, 64, 64)
+        self.example_input_array = torch.Tensor(16, num_frames, img_res, img_res)
 
-        self.conv1 = nn.Conv3d(3, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool1 = nn.AvgPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
+        self.conv1 = nn.Conv2d(num_frames, 64, kernel_size=(3, 3), padding=(1, 1))
+        self.pool1 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
 
-        self.conv2 = nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool2 = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
+        self.conv2 = nn.Conv2d(64, 128, kernel_size=(3, 3), padding=(1, 1))
+        self.pool2 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
 
-        self.conv3a = nn.Conv3d(128, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv3b = nn.Conv3d(256, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool3 = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
+        self.conv3a = nn.Conv2d(128, 256, kernel_size=(3, 3), padding=(1, 1))
+        self.conv3b = nn.Conv2d(256, 256, kernel_size=(3, 3), padding=(1, 1))
+        self.pool3 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
 
-        self.conv4a = nn.Conv3d(256, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv4b = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool4 = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
+        self.conv4a = nn.Conv2d(256, 512, kernel_size=(3, 3), padding=(1, 1))
+        self.conv4b = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
+        self.pool4 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
 
-        self.conv5a = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv5b = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool5 = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2), padding=(0, 1, 1))
+        self.conv5a = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
+        self.conv5b = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
+        self.pool5 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(0, 1, 1))
 
-        self.fc6 = nn.Linear(8192, 4096)
-        self.fc7 = nn.Linear(4096, 4096)
-        self.fc8 = nn.Linear(4096, num_classes)
+        self.fc6 = nn.Linear(2048, 1024)
+        self.fc7 = nn.Linear(1024, 1024)
+        self.fc8 = nn.Linear(1024, num_classes)
 
+        self.flatten = nn.Flatten(start_dim=1)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.5)
 
@@ -56,7 +84,7 @@ class C3D(L.LightningModule):
         out = self.relu(self.conv5b(out))
         out = self.pool5(out)
 
-        out = out.view(-1, 8192)
+        out = self.flatten(out)
         out = self.fc6(out)
         out = self.relu(out)
         out = self.dropout(out)
@@ -69,157 +97,120 @@ class C3D(L.LightningModule):
         return logits
 
     def loss_fn(self, out, target):
-        return nn.CrossEntropyLoss()(out, target)
+        loss = nn.CrossEntropyLoss()(out, target)
+        return loss
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.parameters(), lr=1e-3)
+        return torch.optim.Adam(self.parameters(), lr=0.003 / 255)
 
     def training_step(self, batch, batch_idx):
         video, label = batch
-        video = video.permute(0, 2, 1, 3, 4)
-        # label = label.view(-1) what does this do???
-        out = self(video)
-        prob = nn.Softmax()(out)
-        pred = torch.argmax(prob, dim=1)
+        logits = self(video)
+        loss = self.loss_fn(logits, label)
+        pred = torch.argmax(logits, dim=1)
         acc = self.train_accuracy(pred, label)
-        loss = self.loss_fn(out, label)
+
+        # record metrics
         self.log('train_acc', acc, on_step=False, on_epoch=True)
         self.log('train_loss', loss, on_step=False, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         video, label = batch
-        video = video.permute(0, 2, 1, 3, 4)
-        # label = label.view(-1) what does this do???
-        out = self(video)
-        prob = nn.Softmax()(out)
-        pred = torch.argmax(prob, dim=1)
-        acc = self.train_accuracy(pred, label)
-        loss = self.loss_fn(out, label)
-        self.log('train_acc', acc, on_step=False, on_epoch=True)
-        self.log('train_loss', loss, on_step=False, on_epoch=True)
+        logits = self(video)
+        loss = self.loss_fn(logits, label)
+        pred = torch.argmax(logits, dim=1)
+        acc = self.val_accuracy(pred, label)
+        
+        # record metrics
+        self.log('val_acc', acc, on_step=False, on_epoch=True)
+        self.log('val_loss', loss, on_step=False, on_epoch=True)
         return loss
 
     def test_step(self, batch, batch_idx):
         video, label = batch
-        video = video.permute(0, 2, 1, 3, 4)
-        # label = label.view(-1) what does this do???
-        out = self(video)
-        prob = nn.Softmax()(out)
-        pred = torch.argmax(prob, dim=1)
-        acc = self.train_accuracy(pred, label)
-        loss = self.loss_fn(out, label)
-        self.log('train_acc', acc, on_step=False, on_epoch=True)
-        self.log('train_loss', loss, on_step=False, on_epoch=True)
+        logits = self(video)
+        loss = self.loss_fn(logits, label)
+        pred = torch.argmax(logits, dim=1)
+        acc = self.val_accuracy(pred, label)
+        
+        # record metrics
+        self.log('test_acc', acc, on_step=False, on_epoch=True)
+        self.log('test_loss', loss, on_step=False, on_epoch=True)
         return loss
 
     
-
-
 if __name__ == "__main__":
-    model = C3D()
-    dataset = ""
-    trainer = L.Trainer(max_epochs=1)
-    trainer.fit(model=model, datamodule=dataset)
+    pass
     
+# class C3D(nn.Module):
+#     def __init__(self, img_res=64, num_frames=10, num_classes):
+#         super(C3D, self).__init__()
 
+#         self.conv1 = nn.Conv2d(3, 64, kernel_size=(3, 3), padding=(1, 1))
+#         self.pool1 = nn.AvgPool2d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
 
+#         self.conv2 = nn.Conv2d(64, 128, kernel_size=(3, 3), padding=(1, 1))
+#         self.pool2 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
 
+#         self.conv3a = nn.Conv2d(128, 256, kernel_size=(3, 3), padding=(1, 1))
+#         self.conv3b = nn.Conv2d(256, 256, kernel_size=(3, 3), padding=(1, 1))
+#         self.pool3 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
 
-class C3D(nn.Module):
-    """
-    The C3D network.
+#         self.conv4a = nn.Conv2d(256, 512, kernel_size=(3, 3), padding=(1, 1))
+#         self.conv4b = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
+#         self.pool4 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
 
-    conv1   in:10*3*64*64    out:10*64*64*64
-    pool1   in:10*64*32*32   out:10*64*32*32
+#         self.conv5a = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
+#         self.conv5b = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
+#         self.pool5 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(0, 1, 1))
 
-    conv2   in:10*64*32*32   out:10*128*32*32
-    pool2   in:10*128*32*32  out:5*128*16*16
+#         self.fc6 = nn.Linear(8192, 4096)
+#         self.fc7 = nn.Linear(4096, 4096)
+#         self.fc8 = nn.Linear(4096, num_classes)
 
-    conv3a  in:5*128*16*16   out:5*256*16*16
-    conv3b  in:5*256*16*16   out:5*256*16*16
-    pool3   in:5*256*16*16   out:2*256*8*8
+#         self.dropout = nn.Dropout(p=0.5)
 
-    conv4a  in:2*256*8*8     out:2*512*8*8
-    conv4b  in:2*512*8*8     out:2*512*8*8
-    pool4   in:2*512*8*8     out:1*512*4*4
+#         self.relu = nn.ReLU()
 
-    conv5a  in:1*512*4*4     out:1*512*4*4
-    conv5b  in:1*512*4*4     out:1*512*4*4
-    pool5   in:1*512*4*4     out:1*512*3*3
+#         self.__init_weight()
 
-    fc6     in:512*3*3       out:256*3*3
-    fc7     in:256*3*3       out:256*3*3
-    fc8     in:256*3*3       out:num_classes
-    """
+#     def forward(self, x):
+#         x = self.conv1(x)
+#         x = self.relu(x)
+#         x = self.pool1(x)
 
-    def __init__(self, img_res=64, num_frames=10, num_classes):
-        super(C3D, self).__init__()
+#         x = self.conv2(x)
+#         x = self.relu(x)
+#         x = self.pool2(x)
 
-        self.conv1 = nn.Conv3d(3, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool1 = nn.AvgPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
+#         x = self.conv3a(x)
+#         x = self.relu(x)
+#         x = self.conv3b(x)
+#         x = self.relu(x)
+#         x = self.pool3(x)
 
-        self.conv2 = nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool2 = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
+#         x = self.conv4a(x)
+#         x = self.relu(x)
+#         x = self.conv4b(x)
+#         x = self.relu(x)
+#         x = self.pool4(x)
 
-        self.conv3a = nn.Conv3d(128, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv3b = nn.Conv3d(256, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool3 = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
+#         x = self.conv5a(x)
+#         x = self.relu(x)
+#         x = self.conv5b(x)
+#         x = self.relu(x)
+#         x = self.pool5(x)
 
-        self.conv4a = nn.Conv3d(256, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv4b = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool4 = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
+#         x = x.view(-1, 8192)
+#         x = self.fc6(x)
+#         x = self.relu(x)
+#         x = self.dropout(x)
+#         x = self.fc7(x)
+#         x = self.relu(x)
+#         x = self.dropout(x)
 
-        self.conv5a = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv5b = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool5 = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2), padding=(0, 1, 1))
+#         logits = self.fc8(x)
 
-        self.fc6 = nn.Linear(8192, 4096)
-        self.fc7 = nn.Linear(4096, 4096)
-        self.fc8 = nn.Linear(4096, num_classes)
-
-        self.dropout = nn.Dropout(p=0.5)
-
-        self.relu = nn.ReLU()
-
-        self.__init_weight()
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu(x)
-        x = self.pool1(x)
-
-        x = self.conv2(x)
-        x = self.relu(x)
-        x = self.pool2(x)
-
-        x = self.conv3a(x)
-        x = self.relu(x)
-        x = self.conv3b(x)
-        x = self.relu(x)
-        x = self.pool3(x)
-
-        x = self.conv4a(x)
-        x = self.relu(x)
-        x = self.conv4b(x)
-        x = self.relu(x)
-        x = self.pool4(x)
-
-        x = self.conv5a(x)
-        x = self.relu(x)
-        x = self.conv5b(x)
-        x = self.relu(x)
-        x = self.pool5(x)
-
-        x = x.view(-1, 8192)
-        x = self.fc6(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.fc7(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-
-        logits = self.fc8(x)
-
-        return logits
+#         return logits
 
