@@ -10,7 +10,7 @@ class Variation(Enum):
     ZoomOut = "zoom_out"
     Rotating = "rotating"
  
-def zoom_out(tensor_img, steps=20, zoom=0.95):
+def zoom_out(tensor_img, steps=8, zoom_factor=0.9):
     """Generate zoom out video of n frames from an original image.
 
         :param tensor_img: the original image
@@ -48,7 +48,7 @@ def zoom_out(tensor_img, steps=20, zoom=0.95):
 
     return frames
 
-def zoom_in(tensor_img, steps=20, zoom_factor=1.2):
+def zoom_in(tensor_img, steps=20, zoom_factor=1.3):
     frames = []
     for step in range(steps):
         # Calculate new size and padding

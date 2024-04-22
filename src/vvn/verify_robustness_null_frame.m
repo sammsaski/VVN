@@ -1,7 +1,7 @@
 disp("Running robustness verification...");
 
-if ~exist("./results", 'dir')
-    mkdir("results");
+if ~exist("./results/null_frame", 'dir')
+    mkdir("results/null_frame");
 end
 
 % Load the model
