@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import lightning as L
-from torchmetrics.classification import Accuracy
+from torchmetrics.classification import Accuracy, Precision, Recall, F1Score
 
 # modified from https://github.com/jfzhang95/pytorch-video-recognition/blob/master/network/C3D_model.py
 class C3D(L.LightningModule):
@@ -64,6 +64,10 @@ class C3D(L.LightningModule):
         self.train_accuracy = Accuracy(task="multiclass", num_classes=num_classes)
         self.val_accuracy = Accuracy(task="multiclass", num_classes=num_classes)
         self.test_accuracy = Accuracy(task="multiclasS", num_classes=num_classes)
+
+        self.precision = Precision(task="multiclass", average="macro", num_classes=num_classes)
+        self.recall = Recall(task="multiclass", average="macro", num_classes=num_classes)
+        self.f1 = F1Score(task="multiclass", average="macro", num_classes=num_classes)
 
     def forward(self, x):
         out = self.relu(self.conv1(x))
@@ -133,10 +137,17 @@ class C3D(L.LightningModule):
         loss = self.loss_fn(logits, label)
         pred = torch.argmax(logits, dim=1)
         acc = self.val_accuracy(pred, label)
+        precision = self.precision(logits, label)
+        recall = self.recall(logits, label)
+        f1 = self.f1(logits, label)
         
         # record metrics
         self.log('test_acc', acc, on_step=False, on_epoch=True)
         self.log('test_loss', loss, on_step=False, on_epoch=True)
+        self.log('precision', precision, on_step=False, on_epoch=True)
+        self.log('recall', recall, on_step=False, on_epoch=True)
+        self.log('f1', f1, on_step=False, on_epoch=True)
+        
         return loss
 
     

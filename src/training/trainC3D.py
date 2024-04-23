@@ -1,5 +1,6 @@
 # standard library
 import os
+import json
 
 # imported packages
 import numpy as np
@@ -13,6 +14,10 @@ import lightning as L
 NUM_CLASSES = 10
 IMG_RES = 32
 NUM_FRAMES = 8
+
+def write_callback_metrics(filepath, metrics):
+    with open(filepath, 'w') as json_file:
+        json.dump(filepath, metrics, indent=4)
 
 def train_zoom_in():
     # Load the training + testing datasets
@@ -55,6 +60,13 @@ def train_zoom_in():
                       input_names=['input'],
                       output_names=['output'],
                       dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}})
+    
+    # convert metrics to float from tensor
+    metrics = trainer.callback_metrics
+    metrics = {key: float(value) for key, value in metrics.items()}
+
+    # write the metrics to a json file
+    write_callback_metrics('', metrics)
 
 
 def train_zoom_out():
@@ -98,6 +110,13 @@ def train_zoom_out():
                       input_names=['input'],
                       output_names=['output'],
                       dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}})
+    
+    # convert metrics to float from tensor
+    metrics = trainer.callback_metrics
+    metrics = {key: float(value) for key, value in metrics.items()}
+
+    # write the metrics to a json file
+    write_callback_metrics('', metrics)
 
 
 if __name__=="__main__":
