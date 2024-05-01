@@ -237,14 +237,14 @@ function [IS, xRand] = L_inf_attack(x, epsilon, nR, frameNum)
     lb = x;
     ub = x;
 
-    lb(16, 16, frameNum) = x(16, 16, frameNum) - epsilon;
-    if lb(16, 16, frameNum) < 0
-        lb(16, 16, frameNum) = 0;
+    lb(:, :, frameNum) = x(:, :, frameNum) - epsilon;
+    if lb(:, :, frameNum) < 0
+        lb(:, :, frameNum) = 0;
     end
 
-    ub(16, 16, frameNum) = x(16, 16, frameNum) + epsilon;
-    if ub(16, 16, frameNum) > 1
-        ub(16, 16, frameNum) = 1;
+    ub(:, :, frameNum) = x(:, :, frameNum) + epsilon;
+    if ub(:, :, frameNum) > 1
+        ub(:, :, frameNum) = 1;
     end
 
     IS = ImageStar(single(lb), single(ub));
