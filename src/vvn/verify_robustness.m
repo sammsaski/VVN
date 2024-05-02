@@ -25,14 +25,13 @@ reachOptions.reachMethod = 'relax-star-area';
 reachOptions.relaxFactor = 0.5;
 
 % Size of attack
-% epsilon = [1/255; 2/255; 3/255];
-epsilon = [1/255];
+epsilon = [1/255; 2/255; 3/255];
 nE = length(epsilon);
 
 % Results
-res = zeros(N, nE, 8);
-time = zeros(N, nE, 8);
-met = repmat("relax", [N, nE, 8]);
+res = zeros(N, nE);
+time = zeros(N, nE);
+met = repmat("relax", [N, nE]);
 
 % Verification
 for ms = 1:length(models)
@@ -72,6 +71,7 @@ for ms = 1:length(models)
             % If the current sample is already incorrectly classified, then
             % skip
             if outputLabels(i) ~= labels(i)+1
+                i = i + 1;
                 continue;
             end
 
@@ -81,39 +81,37 @@ for ms = 1:length(models)
             iterationNum = sum(classIndex);
             fprintf('Iteration %d \n', iterationNum);
 
-            for frameNum = 1:8
-                [IS, xRand] = L_inf_attack(datacopy(:,:,:,i), eps, nR, frameNum);
-                t = tic;
-                predictedLabels = predict(netonnx, xRand);
-                [~, predictedLabels] = max(predictedLabels, [], 2);
- 
-                if any(predictedLabels-1 ~= labels(i))
-                    res(iterationNum, e, frameNum) = 0;
-                    time(iterationNum, e, frameNum) = toc(t);
-                    met(iterationNum, e, frameNum) = "counterexample";
-                    continue;
-                end
-    
-                try
-                    temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
-                    if temp ~= 1 && temp ~= 0
-                        reachOptions = struct;
-                        reachOptions.reachMethod = 'approx-star';
-                        temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
-                        met(iterationNum, e) = 'approx';
-                    end
-    
-                catch ME
-                    met(iterationNum, e) = ME.message;
-                    temp = -1;
-                end
-    
-                res(iterationNum, e, frameNum) = temp;
-                time(iterationNum, e, frameNum) = toc(t);
-    
-                reachOptions.reachMethod = 'relax-star-area';
-                reachOptions.relaxFactor = 0.5;
+            [IS, xRand] = L_inf_attack(datacopy(:,:,:,i), eps, nR, 4); % choose frame number 4
+            t = tic;
+            predictedLabels = predict(netonnx, xRand);
+            [~, predictedLabels] = max(predictedLabels, [], 2);
+
+            if any(predictedLabels-1 ~= labels(i))
+                res(iterationNum, e) = 0;
+                time(iterationNum, e) = toc(t);
+                met(iterationNum, e) = "counterexample";
+                continue;
             end
+
+            try
+                temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
+                if temp ~= 1 && temp ~= 0
+                    reachOptions = struct;
+                    reachOptions.reachMethod = 'approx-star';
+                    temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
+                    met(iterationNum, e) = 'approx';
+                end
+
+            catch ME
+                met(iterationNum, e) = ME.message;
+                temp = -1;
+            end
+
+            res(iterationNum, e) = temp;
+            time(iterationNum, e) = toc(t);
+
+            reachOptions.reachMethod = 'relax-star-area';
+            reachOptions.relaxFactor = 0.5;
 
             % move to the next sample
             i = i + 1;
@@ -122,10 +120,10 @@ for ms = 1:length(models)
         % Results MAKE SURE TO ADAPT THINGS BACK FOR MULTIPLE EPSILON VALUES
         disp("======== RESULTS ========");
         disp("");
-        disp("Average computation time: "+string(sum(time(:,e,:))/N));
+        disp("Average computation time: "+string(sum(time(:,e))/N));
         disp("");
-        % disp("Robust = "+string(sum(res(:,e)==1))+" out of " + string(N) + " videos");
-        % disp("");
+        disp("Robust = "+string(sum(res(:,e)==1))+" out of " + string(N) + " videos");
+        disp("");
         save("results/ZoomOut/C3D_small_robustness_results_FPV", "res", "time", "epsilon", "met");
 
     end
@@ -158,14 +156,13 @@ reachOptions.reachMethod = 'relax-star-area';
 reachOptions.relaxFactor = 0.5;
 
 % Size of attack
-% epsilon = [1/255; 2/255; 3/255];
-epsilon = [1/255];
+epsilon = [1/255; 2/255; 3/255];
 nE = length(epsilon);
 
 % Results
-res = zeros(N, nE, 8);
-time = zeros(N, nE, 8);
-met = repmat("relax", [N, nE, 8]);
+res = zeros(N, nE);
+time = zeros(N, nE);
+met = repmat("relax", [N, nE]);
 
 % Verification
 for ms = 1:length(models)
@@ -205,6 +202,7 @@ for ms = 1:length(models)
             % If the current sample is already incorrectly classified, then
             % skip
             if outputLabels(i) ~= labels(i)+1
+                i = i + 1;
                 continue;
             end
          
@@ -214,39 +212,37 @@ for ms = 1:length(models)
             iterationNum = sum(classIndex);
             fprintf('Iteration %d \n', iterationNum);
 
-            for frameNum = 1:8
-                [IS, xRand] = L_inf_attack(datacopy(:,:,:,i), eps, nR, 4); % frame number 4 selected
-                t = tic;
-                predictedLabels = predict(netonnx, xRand);
-                [~, predictedLabels] = max(predictedLabels, [], 2);
-                if any(predictedLabels-1 ~= labels(i))
-                    res(iterationNum, e, frameNum) = 0;
-                    time(iterationNum, e, frameNum) = toc(t);
-                    met(iterationNum, e, frameNum) = "counterexample";
-                    continue;
-                end
-    
-                try
-                    temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
-                    if temp ~= 1 && temp ~= 0
-                        reachOptions = struct;
-                        reachOptions.reachMethod = 'approx-star';
-                        temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
-                        met(iterationNum, e, frameNum) = 'approx';
-                    end
-    
-                catch ME
-                    met(iterationNum, e, frameNum) = ME.message;
-                    temp = -1;
-                end
-
-                res(iterationNum, e, frameNum) = temp;
-                time(iterationNum, e, frameNum) = toc(t);
-    
-                reachOptions.reachMethod = 'relax-star-area';
-                reachOptions.relaxFactor = 0.5;
+            [IS, xRand] = L_inf_attack(datacopy(:,:,:,i), eps, nR, 4); % frame number 4 selected
+            t = tic;
+            predictedLabels = predict(netonnx, xRand);
+            [~, predictedLabels] = max(predictedLabels, [], 2);
+            if any(predictedLabels-1 ~= labels(i))
+                res(iterationNum, e) = 0;
+                time(iterationNum, e) = toc(t);
+                met(iterationNum, e) = "counterexample";
+                continue;
             end
 
+            try
+                temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
+                if temp ~= 1 && temp ~= 0
+                    reachOptions = struct;
+                    reachOptions.reachMethod = 'approx-star';
+                    temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
+                    met(iterationNum, e) = 'approx';
+                end
+
+            catch ME
+                met(iterationNum, e) = ME.message;
+                temp = -1;
+            end
+
+            res(iterationNum, e) = temp;
+            time(iterationNum, e) = toc(t);
+
+            reachOptions.reachMethod = 'relax-star-area';
+            reachOptions.relaxFactor = 0.5;
+            
             % move to the next sample
             i = i + 1;
         end
@@ -254,39 +250,11 @@ for ms = 1:length(models)
         % Results MAKE SURE TO ADAPT THINGS BACK FOR MULTIPLE EPSILON VALUES
         disp("======== RESULTS ========");
         disp("");
-        disp("Average computation time: "+string(sum(time(:,e,:))/N));
-        % disp("");
-        % disp("Robust = "+string(sum(res(:,e,:)==1))+" out of " + string(N) + " videos");
-        % disp("");
+        disp("Average computation time: "+string(sum(time(:,e))/N));
+        disp("");
+        disp("Robust = "+string(sum(res(:,e)==1))+" out of " + string(N) + " videos");
+        disp("");
         save("results/ZoomIn/C3D_small_robustness_results_FPV", "res", "time", "epsilon", "met");
 
     end
-end
-
-%% Helper function
-function [IS, xRand] = L_inf_attack(x, epsilon, nR, frameNum)
-    lb = x;
-    ub = x;
-
-    lb(:, :, frameNum) = x(:, :, frameNum) - epsilon;
-    % if lb(:, :, frameNum) < 0
-    %     lb(:, :, frameNum) = 0;
-    % end
-
-    ub(:, :, frameNum) = x(:, :, frameNum) + epsilon;
-    % if ub(:, :, frameNum) > 1
-    %     ub(:, :, frameNum) = 1;
-    % end
-
-    IS = ImageStar(single(lb), single(ub));
-
-    lb = reshape(lb, [8192, 1]);
-    ub = reshape(ub, [8192, 1]);
-
-    xB = Box(single(lb), single(ub));
-    xRand = xB.sample(nR);
-    xRand = reshape(xRand, [32, 32, 8, nR]);
-    xRand(:, :, :, nR+1) = x;
-    xRand(:, :, :, nR+2) = IS.im_lb;
-    xRand(:, :, :, nR+3) = IS.im_ub;
 end
