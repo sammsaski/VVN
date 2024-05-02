@@ -3,6 +3,7 @@ import torch.nn as nn
 import lightning as L
 from torchmetrics.classification import Accuracy, Precision, Recall, F1Score
 
+
 # modified from https://github.com/jfzhang95/pytorch-video-recognition/blob/master/network/C3D_model.py
 class C3D(L.LightningModule):
     """
@@ -30,6 +31,7 @@ class C3D(L.LightningModule):
     fc7     in:256*3*3       out:256*3*3
     fc8     in:256*3*3       out:num_classes
     """
+
     def __init__(self, img_res=32, num_frames=8, num_classes=10):
         super().__init__()
 
@@ -65,8 +67,12 @@ class C3D(L.LightningModule):
         self.val_accuracy = Accuracy(task="multiclass", num_classes=num_classes)
         self.test_accuracy = Accuracy(task="multiclasS", num_classes=num_classes)
 
-        self.precision = Precision(task="multiclass", average="macro", num_classes=num_classes)
-        self.recall = Recall(task="multiclass", average="macro", num_classes=num_classes)
+        self.precision = Precision(
+            task="multiclass", average="macro", num_classes=num_classes
+        )
+        self.recall = Recall(
+            task="multiclass", average="macro", num_classes=num_classes
+        )
         self.f1 = F1Score(task="multiclass", average="macro", num_classes=num_classes)
 
     def forward(self, x):
@@ -115,8 +121,8 @@ class C3D(L.LightningModule):
         acc = self.train_accuracy(pred, label)
 
         # record metrics
-        self.log('train_acc', acc, on_step=False, on_epoch=True)
-        self.log('train_loss', loss, on_step=False, on_epoch=True)
+        self.log("train_acc", acc, on_step=False, on_epoch=True)
+        self.log("train_loss", loss, on_step=False, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -125,10 +131,10 @@ class C3D(L.LightningModule):
         loss = self.loss_fn(logits, label)
         pred = torch.argmax(logits, dim=1)
         acc = self.val_accuracy(pred, label)
-        
+
         # record metrics
-        self.log('val_acc', acc, on_step=False, on_epoch=True)
-        self.log('val_loss', loss, on_step=False, on_epoch=True)
+        self.log("val_acc", acc, on_step=False, on_epoch=True)
+        self.log("val_loss", loss, on_step=False, on_epoch=True)
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -140,88 +146,103 @@ class C3D(L.LightningModule):
         precision = self.precision(logits, label)
         recall = self.recall(logits, label)
         f1 = self.f1(logits, label)
-        
+
         # record metrics
-        self.log('test_acc', acc, on_step=False, on_epoch=True)
-        self.log('test_loss', loss, on_step=False, on_epoch=True)
-        self.log('precision', precision, on_step=False, on_epoch=True)
-        self.log('recall', recall, on_step=False, on_epoch=True)
-        self.log('f1', f1, on_step=False, on_epoch=True)
-        
+        self.log("test_acc", acc, on_step=False, on_epoch=True)
+        self.log("test_loss", loss, on_step=False, on_epoch=True)
+        self.log("precision", precision, on_step=False, on_epoch=True)
+        self.log("recall", recall, on_step=False, on_epoch=True)
+        self.log("f1", f1, on_step=False, on_epoch=True)
+
         return loss
 
-    
+
+class C3DSmall(L.LightningModule):
+    def __init__(self, num_classes):
+        super().__init__()
+
+        self.example_input_array = torch.Tensor(16, 8, 32, 32)
+
+        self.conv1 = nn.Conv2d(8, 16, kernel_size=(3, 3), padding=(1, 1))
+        self.pool1 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
+
+        self.fc8 = nn.Linear(4096, num_classes)
+
+        self.flatten = nn.Flatten(start_dim=1)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=0.5)
+
+        self.train_accuracy = Accuracy(task="multiclass", num_classes=num_classes)
+        self.val_accuracy = Accuracy(task="multiclass", num_classes=num_classes)
+        self.test_accuracy = Accuracy(task="multiclass", num_classes=num_classes)
+
+        self.precision = Precision(
+            task="multiclass", average="macro", num_classes=num_classes
+        )
+        self.recall = Recall(
+            task="multiclass", average="macro", num_classes=num_classes
+        )
+        self.f1 = F1Score(task="multiclass", average="macro", num_classes=num_classes)
+
+    def forward(self, x):
+        out = self.relu(self.conv1(x))
+        out = self.pool1(out)
+
+        out = self.flatten(out)
+        out = self.dropout(out)
+
+        logits = self.fc8(out)
+
+        return logits
+
+    def loss_fn(self, out, target):
+        loss = nn.CrossEntropyLoss()(out, target)
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.003 / 255)
+        return optimizer
+
+    def training_step(self, batch, batch_idx):
+        video, label = batch
+        logits = self(video)
+        loss = self.loss_fn(logits, label)
+        pred = torch.argmax(logits, dim=1)
+        acc = self.train_accuracy(pred, label)
+
+        self.log("train_acc", acc, on_step=False, on_epoch=True)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        video, label = batch
+        logits = self(video)
+        loss = self.loss_fn(logits, label)
+        pred = torch.argmax(logits, dim=1)
+        acc = self.val_accuracy(pred, label)
+
+        self.log("val_acc", acc, on_step=False, on_epoch=True)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        video, label = batch
+        logits = self(video)
+        loss = self.loss_fn(logits, label)
+        pred = torch.argmax(logits, dim=1)
+        acc = self.test_accuracy(pred, label)
+        precision = self.precision(logits, label)
+        recall = self.recall(logits, label)
+        f1 = self.f1(logits, label)
+
+        self.log("test_acc", acc, on_step=False, on_epoch=True)
+        self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("precision", precision, on_step=False, on_epoch=True)
+        self.log("recall", recall, on_step=False, on_epoch=True)
+        self.log("f1", f1, on_step=False, on_epoch=True)
+
+        return loss
+
+
 if __name__ == "__main__":
     pass
-    
-# class C3D(nn.Module):
-#     def __init__(self, img_res=64, num_frames=10, num_classes):
-#         super(C3D, self).__init__()
-
-#         self.conv1 = nn.Conv2d(3, 64, kernel_size=(3, 3), padding=(1, 1))
-#         self.pool1 = nn.AvgPool2d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
-
-#         self.conv2 = nn.Conv2d(64, 128, kernel_size=(3, 3), padding=(1, 1))
-#         self.pool2 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
-
-#         self.conv3a = nn.Conv2d(128, 256, kernel_size=(3, 3), padding=(1, 1))
-#         self.conv3b = nn.Conv2d(256, 256, kernel_size=(3, 3), padding=(1, 1))
-#         self.pool3 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
-
-#         self.conv4a = nn.Conv2d(256, 512, kernel_size=(3, 3), padding=(1, 1))
-#         self.conv4b = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
-#         self.pool4 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
-
-#         self.conv5a = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
-#         self.conv5b = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1))
-#         self.pool5 = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(0, 1, 1))
-
-#         self.fc6 = nn.Linear(8192, 4096)
-#         self.fc7 = nn.Linear(4096, 4096)
-#         self.fc8 = nn.Linear(4096, num_classes)
-
-#         self.dropout = nn.Dropout(p=0.5)
-
-#         self.relu = nn.ReLU()
-
-#         self.__init_weight()
-
-#     def forward(self, x):
-#         x = self.conv1(x)
-#         x = self.relu(x)
-#         x = self.pool1(x)
-
-#         x = self.conv2(x)
-#         x = self.relu(x)
-#         x = self.pool2(x)
-
-#         x = self.conv3a(x)
-#         x = self.relu(x)
-#         x = self.conv3b(x)
-#         x = self.relu(x)
-#         x = self.pool3(x)
-
-#         x = self.conv4a(x)
-#         x = self.relu(x)
-#         x = self.conv4b(x)
-#         x = self.relu(x)
-#         x = self.pool4(x)
-
-#         x = self.conv5a(x)
-#         x = self.relu(x)
-#         x = self.conv5b(x)
-#         x = self.relu(x)
-#         x = self.pool5(x)
-
-#         x = x.view(-1, 8192)
-#         x = self.fc6(x)
-#         x = self.relu(x)
-#         x = self.dropout(x)
-#         x = self.fc7(x)
-#         x = self.relu(x)
-#         x = self.dropout(x)
-
-#         logits = self.fc8(x)
-
-#         return logits
-
