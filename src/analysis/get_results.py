@@ -17,9 +17,9 @@ def get_averages(filepath):
             t = data["time"][i]
 
             # Certified robustness accuracy
-            epsilon_1_avg["correct"] += res[0] if res[0] else 0
-            epsilon_2_avg["correct"] += res[1] if res[1] else 0
-            epsilon_3_avg["correct"] += res[2] if res[2] else 0
+            epsilon_1_avg["correct"] += res[0] if res[0] == 1 else 0
+            epsilon_2_avg["correct"] += res[1] if res[1] == 1 else 0
+            epsilon_3_avg["correct"] += res[2] if res[2] == 1 else 0
 
             # Compute time
             epsilon_1_avg["time"] += t[0]
@@ -73,15 +73,21 @@ def get_scalability_averages(filepath):
 
             # Per frame metrics
             for frame_i in range(len(res[0])):  # epsilon 1
-                epsilon_1_per_frame[frame_i]["correct"] += 1 if res[0][frame_i] else 0
+                epsilon_1_per_frame[frame_i]["correct"] += (
+                    1 if res[0][frame_i] == 1 else 0
+                )
                 epsilon_1_per_frame[frame_i]["time"] += t[0][frame_i]
 
             for frame_i in range(len(res[1])):  # epsilon 2
-                epsilon_2_per_frame[frame_i]["correct"] += 1 if res[1][frame_i] else 0
+                epsilon_2_per_frame[frame_i]["correct"] += (
+                    1 if res[1][frame_i] == 1 else 0
+                )
                 epsilon_2_per_frame[frame_i]["time"] += t[1][frame_i]
 
             for frame_i in range(len(res[2])):  # epsilon 3
-                epsilon_3_per_frame[frame_i]["correct"] += 1 if res[2][frame_i] else 0
+                epsilon_3_per_frame[frame_i]["correct"] += (
+                    1 if res[2][frame_i] == 1 else 0
+                )
                 epsilon_3_per_frame[frame_i]["time"] += t[2][frame_i]
 
         # compute CRA
