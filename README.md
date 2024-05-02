@@ -1,4 +1,4 @@
-# VVN-ATAV2024
+# Robustness Verification of Video Classification Neural Networks
 A Benchmark for the verification of video classification networks. 
 
 # Using MATLAB
