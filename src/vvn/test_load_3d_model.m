@@ -13,39 +13,43 @@ disp("Finished loading model: " + modelName);
 data = readNPY('../../data/3D/ZoomOut/mnistvideo_32x32_test_data_seq.npy');
 labels = readNPY('../../data/3D/ZoomOut/mnistvideo_32x32_test_labels_seq.npy');
 
-%reshaped_data = permute(data, [1, 3, 2, 4, 5]); % to match BCSSS
-% data_squeezed = permute(squeeze(data), [1,3,2,4,5]);
-%data_squeezed = squeeze(data);
-%datacopy = reshaped_data(:,:,:,:);
-data_squeezed = permute(squeeze(data), [3, 4, 2, 1]);
-datacopy = data_squeezed(:, :, :, :);
+reshaped_data = permute(data, [1, 3, 2, 4, 5]); % to match BCSSS
+data_squeezed = squeeze(reshaped_data);
+datacopy = data_squeezed(:,:,:,:);
 
 % Get a single sample + label, define epsilon
-sample = datacopy(:,:,:,1); % get the first sample
+sample = datacopy(1,:,:,:); % get the first sample
+sample = squeeze(sample);
 label = labels(1);
 epsilon = 1/255;
 
+% Visualize a frame in the video
+%figure;
+%imshow(sample(1,:,:))
+
 % Trying to get the network to work ; this is just testing code. can
 % delete.
-%sample = reshape(sample, [32, 32, 8, 1]);
-%net.evaluate(sample)
+% sample = reshape(sample, [32, 32, 8, 1]);
+% net.evaluate(sample)
 
 %% Create the perturbed sample
 % Perturb the sample on frame indexed at frame_num
-p_frame_lower = sample(:,:,1,:) - epsilon; 
-p_frame_upper = sample(:,:,1,:) + epsilon;
+p_frame_lower = sample(1,:,:) - epsilon; % was (:,:,1,:)
+p_frame_upper = sample(1,:,:) + epsilon; % was (:,:,1,:)
 
 % Create the lowerbound + upperbound
 lb = sample;
 ub = sample;
 
 % Add the perturbation
-lb(:,:,1,:) = p_frame_lower; % was (:,:,1)
-ub(:,:,1,:) = p_frame_upper; % was (:,:,1)
+lb(1,:,:) = p_frame_lower; % was (:,:,1,:)
+lb = squeeze(lb);
+ub(1,:,:) = p_frame_upper; % was (:,:,1,:)
+ub = squeeze(ub);
 
 % Create the volume star
-lb_min = zeros(32, 32, 8, 1);
-ub_max = ones(32, 32, 8, 1);
+lb_min = zeros(8, 32, 32);
+ub_max = ones(8, 32, 32);
 lb_clip = max(lb, lb_min);
 ub_clip = min(ub, ub_max);
 
@@ -75,6 +79,8 @@ if res_approx == 1
 else
     disp("Unknown result")
 end
+
+fprintf("Res approx: %d", res_approx);
 
 toc(t);
 
