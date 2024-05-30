@@ -21,49 +21,63 @@ epsilon = 1/255;
 %figure;
 %imshow(sample(:,:,1))
 
-% Perturb the sample on frame 1
-p_frame_lower = sample(:,:,1) - epsilon;
-p_frame_upper = sample(:,:,1) + epsilon;
+results = zeros(3, 8);
 
-% Create the lowerbound + upperbound
-lb = sample;
-ub = sample;
+for frame_num = 1:8
+    % Perturb the sample on frame indexed at frame_num
+    p_frame_lower = sample(:,:,frame_num) - epsilon;
+    p_frame_upper = sample(:,:,frame_num) + epsilon;
+    
+    % Create the lowerbound + upperbound
+    lb = sample;
+    ub = sample;
+    
+    % Add the perturbation
+    lb(:,:,frame_num) = p_frame_lower;
+    ub(:,:,frame_num) = p_frame_upper;
+    
+    % Create the image star
+    lb_min = zeros(32, 32);
+    ub_max = 255*ones(32, 32);
+    lb_clip = max(lb, lb_min);
+    ub_clip = min(ub, ub_max);
+    IS = ImageStar(lb_clip, ub_clip);
+    
+    % Evaluate lower and upper bounds
+    LB_outputs = net.evaluate(lb_clip);
+    [~, LB_Pred] = max(LB_outputs);
+    UB_outputs = net.evaluate(ub_clip);
+    [~, UB_Pred] = max(UB_outputs);
+    
+    Y_outputs = net.evaluate(sample);
+    [~, yPred] = max(Y_outputs);
+    
+    % Now for verification
+    reachOptions = struct;
+    reachOptions.reachMethod = 'approx-star';
+    
+    % Verification
+    t = tic;
+    res_approx = net.verify_robustness(IS, reachOptions, label);
+    
+    if res_approx == 1
+        disp("Neural network is verified to be robust!")
+    else
+        disp("Unknown result")
+    end
+    
+    toc(t);
 
-% Add the perturbation
-lb(:,:,1) = p_frame_lower;
-ub(:,:,1) = p_frame_upper;
+    R = net.reachSet{end};
 
-% Create the image star
-lb_min = zeros(32, 32);
-ub_max = 255*ones(32, 32);
-lb_clip = max(lb, lb_min);
-ub_clip = min(ub, ub_max);
-IS = ImageStar(lb_clip, ub_clip);
+    [lb_out, ub_out] = R.getRanges;
+    lb_out = squeeze(lb_out);
+    ub_out = squeeze(ub_out);
 
-% Evaluate lower and upper bounds
-LB_outputs = net.evaluate(lb_clip);
-[~, LB_Pred] = max(LB_outputs);
-UB_outputs = net.evaluate(ub_clip);
-[~, UB_Pred] = max(UB_outputs);
+    mid_range = (lb_out + ub_out) / 2;
+    range_size = ub_out - mid_range;
 
-Y_outputs = net.evaluate(sample);
-[~, yPred] = max(Y_outputs);
-
-% Now for verification
-reachOptions = struct;
-reachOptions.reachMethod = 'approx-star';
-
-% Verification
-t = tic;
-res_approx = net.verify_robustness(IS, reachOptions, label);
-
-if res_approx == 1
-    disp("Neural network is verified to be robust!")
-else
-    disp("Unknown result")
-end
-
-toc(t);
+    
 
 %% Let's visualize the ranges for every possible output
 R = net.reachSet{end};
