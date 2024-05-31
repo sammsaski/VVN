@@ -20,7 +20,7 @@ datacopy = data_squeezed(:,:,:,:);
 % Get a single sample + label, define epsilon
 sample = datacopy(1,:,:,:); % get the first sample
 sample = squeeze(sample);
-label = labels(1);
+label = labels(1) + 1; % have to change label bc 1-indexing in MATLAB vs 0-indexing in Python
 epsilon = 1/255;
 
 % Visualize a frame in the video
@@ -80,7 +80,7 @@ else
     disp("Unknown result")
 end
 
-fprintf("Res approx: %d", res_approx);
+fprintf("Res approx: %d \n", res_approx);
 
 toc(t);
 
