@@ -322,36 +322,3 @@ function [VS, xRand] = L_inf_attack(x, epsilon, nR, numFrames)
     xRand(:,:,:,nR+2) = VS.vol_lb;
     xRand(:,:,:,nR+3) = VS.vol_ub;
 end
-
-%% Helper Function
-function [VS, xRand] = L_inf_attack(x, epsilon, nR, numFrames)
-    lb = squeeze(x);
-    ub = squeeze(x);
-
-    % Perturb the frames
-    for fn=1:numFrames
-        lb(fn, :, :) = x(fn, :, :) - epsilon;
-        ub(fn, :, :) = x(fn, :, :) + epsilon;
-    end
-
-    % Clip the perturbed values to be between 0-1
-    lb_min = zeros(8, 32, 32);
-    ub_max = ones(8, 32, 32);
-    lb_clip = max(lb, lb_min);
-    ub_clip = min(ub, ub_max);
-
-    % Create the volume star
-    VS = VolumeStar(lb_clip, ub_clip);
-
-    % Create random images from initial set
-    lb = reshape(lb, [8192, 1]);
-    ub = reshape(ub, [8192, 1]);
-    xB = Box(single(lb), single(ub));
-    xRand = xB.sample(nR);
-    xRand = reshape(xRand, [8, 32, 32, nR]);
-    xRand(:,:,:,nR+1) = x;
-    xRand(:,:,:,nR+2) = VS.vol_lb;
-    xRand(:,:,:,nR+3) = VS.vol_ub;
-end
-
-
