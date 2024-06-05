@@ -91,7 +91,7 @@ for e=1:nE
         t = tic;
 
         % Falsification
-        predictedLabels = zeros(nR+3);
+        predictedLabels = zeros(nR+3, 1);
         for j=1:length(predictedLabels)
             s = xRand(:,:,:,j);
             s = squeeze(s);
@@ -111,11 +111,11 @@ for e=1:nE
         end
 
         try
-            temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
+            temp = net.verify_robustness(VS, reachOptions, labels(i)+1);
             if temp ~= 1 && temp ~= 0
                 reachOptions = struct;
                 reachOptions.reachMethod = 'approx-star';
-                temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
+                temp = net.verify_robustness(VS, reachOptions, labels(i)+1);
                 met(iterationNum, e) = 'approx';
             end
 
@@ -238,7 +238,7 @@ for e=1:nE
         t = tic;
 
         % Falsification
-        predictedLabels = zeros(nR+3);
+        predictedLabels = zeros(nR+3, 1);
         for j=1:length(predictedLabels)
             s = xRand(:,:,:,j);
             s = squeeze(s);
@@ -258,11 +258,11 @@ for e=1:nE
         end
 
         try
-            temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
+            temp = net.verify_robustness(VS, reachOptions, labels(i)+1);
             if temp ~= 1 && temp ~= 0
                 reachOptions = struct;
                 reachOptions.reachMethod = 'approx-star';
-                temp = net.verify_robustness(IS, reachOptions, labels(i)+1);
+                temp = net.verify_robustness(VS, reachOptions, labels(i)+1);
                 met(iterationNum, e) = 'approx';
             end
 
