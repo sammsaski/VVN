@@ -62,10 +62,10 @@ for e=1:nE
     classIndex = zeros(numClasses, 1);
 
     i = 1;
-    while any(classIndex ~= 1)
+    while any(classIndex ~= n)
 
         % If we've already verified 10 samples of this class, then skip
-        if classIndex(labels(i)+1) == 1
+        if classIndex(labels(i)+1) == n
             i = i + 1;
             continue;
         end
@@ -209,10 +209,10 @@ for e=1:nE
     classIndex = zeros(numClasses, 1);
 
     i = 1;
-    while any(classIndex ~= 1)
+    while any(classIndex ~= n)
 
         % If we've already verified 10 samples of this class, then skip
-        if classIndex(labels(i)+1) == 1
+        if classIndex(labels(i)+1) == n
             i = i + 1;
             continue;
         end
