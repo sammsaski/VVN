@@ -28,8 +28,8 @@ function [VS, xRand] = L_inf_attack(x, epsilon, nR, numFrames)
     end
 
     % Clip the perturbed values to be between 0-1
-    lb_min = zeros(8, 32, 32);
-    ub_max = ones(8, 32, 32);
+    lb_min = zeros(numFrames, 32, 32);
+    ub_max = ones(numFrames, 32, 32);
     lb_clip = max(lb, lb_min);
     ub_clip = min(ub, ub_max);
 
@@ -37,11 +37,11 @@ function [VS, xRand] = L_inf_attack(x, epsilon, nR, numFrames)
     VS = VolumeStar(lb_clip, ub_clip);
 
     % Create random images from initial set
-    lb = reshape(lb, [8192, 1]);
-    ub = reshape(ub, [8192, 1]);
+    lb = reshape(lb, [numFrames*32*32, 1]);
+    ub = reshape(ub, [numFrames*32*32, 1]);
     xB = Box(single(lb), single(ub));
     xRand = xB.sample(nR);
-    xRand = reshape(xRand, [8, 32, 32, nR]);
+    xRand = reshape(xRand, [numFrames, 32, 32, nR]);
     xRand(:,:,:,nR+1) = x;
     xRand(:,:,:,nR+2) = VS.vol_lb;
     xRand(:,:,:,nR+3) = VS.vol_ub;
@@ -172,7 +172,7 @@ function [] = verify(dsVar, smpLen, vType)
             sample = squeeze(datacopy(i,:,:,:));
             
             % Perform L_inf attack
-            [VS, xRand] = L_inf_attack(sample, eps, nR, 8);
+            [VS, xRand] = L_inf_attack(sample, eps, nR, smpLen);
             t = tic;
 
             % Falsification
