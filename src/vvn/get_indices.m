@@ -124,76 +124,46 @@ function [] = verify(dsVar, smpLen, vType)
         outputLabels(i) = P;
     end
 
-    % INDICES
-    ind = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 91, 92, 95, 98, 100, 101, 103, 104, 105, 108, 129, 131, 133, 134, 135, 136, 137, 140, 143, 144, 145, 146, 147, 148, 149, 150, 152, 156, 157, 158, 159, 160, 161, 162, 163, 165, 166, 167, 169, 176, 272, 282, 285, 287, 288, 289, 290, 291, 292, 293, 295, 299, 300, 301, 304, 305, 309, 316, 320, 328, 330, 331, 332, 335, 336, 345, 368, 380, 395, 422, 573, 576, 579, 581, 600, 605, 607, 618, 628, 632, 822, 823, 825, 834, 838, 848, 863, 866, 870, 872];
-
     %%%%%%%%%%%%%%%%
     % VERIFICATION %
     %%%%%%%%%%%%%%%%
-    for e=1:nE % we skip the first one because we completed that before
+    for e=2:nE % we skip the first one because we completed that before
         fprintf('Starting verification with epsilon %d \n', epsilon(e));
         eps = epsilon(e);
-
-        for index_num=1:100
-            i = ind(index_num);
         
-            fprintf('Iteration %d \n', iterationNum);
+        % Track number of samples verified
+        classIndex = zeros(numClasses, 1);
 
-            % Get the sample
-            sample = squeeze(datacopy(i,:,:,:));
-            
-            % Perform L_inf attack
-            [VS, xRand] = L_inf_attack(sample, eps, nR, smpLen);
-            t = tic;
+        i = 1;
+        while any(classIndex ~= n)
 
-            % Falsification
-            predictedLabels = zeros(nR+3, 1);
-            for j=1:length(predictedLabels)
-                s = xRand(:,:,:,j);
-                s = squeeze(s);
-            
-                outputs = net.evaluate(s);
-                [~, P] = max(outputs);
-            
-                % Add the prediction to the set of outputs on xRand
-                predictedLabels(j) = P;
-            end
-
-            if any(predictedLabels ~= labels(i)+1)
-                res(iterationNum, e) = 0;
-                time(iterationNum, e) = toc(t);
-                met(iterationNum, e) = "counterexample";
+            % If we've already verified 10 samples of this class, then skip
+            if classIndex(labels(i)+1) == n
+                i = i + 1;
                 continue;
             end
 
-            try
-                temp = net.verify_robustness(VS, reachOptions, labels(i)+1);
-                if temp ~= 1 && temp ~= 0
-                    reachOptions = struct;
-                    reachOptions.reachMethod = 'approx-star';
-                    temp = net.verify_robustness(VS, reachOptions, labels(i)+1);
-                    met(iterationNum, e) = 'approx';
-                end
-
-            catch ME
-                met(iterationNum, e) = ME.message;
-                temp = -1;
+            % If the current sample is already incorrectly classified, then
+            % skip
+            if outputLabels(i) ~= labels(i)+1
+                i = i + 1;
+                continue;
             end
 
-            res(iterationNum, e) = temp;
-            time(iterationNum, e) = toc(t);
+            % Otherwise, add 1 to class index
+            classIndex(labels(i)+1) = classIndex(labels(i)+1) + 1;
+            
+            iterationNum = sum(classIndex);
+            fprintf('Iteration %d with index: %d \n', iterationNum, i);
 
-            reachOptions.reachMethod = 'relax-star-area';
-            reachOptions.relaxFactor = 0.5;
+            i = i + 1;
+
+            % if iterationNum == 62 || iterationNum == 87 || iterationNum == 89 || iterationNum == 92 || iterationNum == 94
+            %     i = i + 1;
+            %     met(iterationNum, e) = "timeout";
+            %     continue
+            % end
+
         end
-
-        % Results MAKE SURE TO ADAPT THINGS BACK FOR MULTIPLE EPSILON VALUES
-        disp("======== RESULTS ========");
-        disp("");
-        disp("Average computation time: "+string(sum(time(:,e))/N));
-        disp("");
-        disp("Robust = "+string(sum(res(:,e)==1))+" out of " + string(N) + " videos");
-        disp("");
-        save(sprintf("../../results/%s/%s/%df", vType, dsVarCaps, smpLen), "res", "time", "epsilon", "met");
     end
 end
