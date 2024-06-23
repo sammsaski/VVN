@@ -74,12 +74,12 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
 #       whether in python or matlab
 def get_correct_samples(ds_type, sample_len, modelpath, datapath) -> List[int]:
     # check that ds_type + sample_len are the correct types/values
-    # TODO: consider making data directory naming more consistent
-    ds_type = "ZoomIn" if ds_type == "zoom_in" else "ZoomOut" # have to convert because of naming conventions
+    # TODO: consider making data directory naming more consistent (note that there exists ds_type, alt_ds_type, and model_ds_type)
+    alt_ds_type = "ZoomIn" if ds_type == "zoom_in" else "ZoomOut" # have to convert because of naming conventions
     sample_len = str(sample_len)
     
     # load the data + labels; example : VVN/data/ZoomOut/test/mnistvideo_zoom_out_4f_test_dat_seq.npy
-    data = np.load(os.path.join(datapath, ds_type, 'test', f'mnistvideo_{ds_type}_{sample_len}f_test_data_seq.npy'))
+    data = np.load(os.path.join(datapath, alt_ds_type, 'test', f'mnistvideo_{ds_type}_{sample_len}f_test_data_seq.npy'))
     labels = np.load(os.path.join(datapath, f'mnistvideo_{ds_type}_test_labels_seq.npy'))
 
     # specify model
