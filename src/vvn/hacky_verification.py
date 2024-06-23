@@ -59,9 +59,12 @@ if __name__ == "__main__":
     print('indices generated')
 
     # for index, i in enumerate(indices):
-    for index in range(67, len(indices)):
+    # for index in range(67, len(indices)):
+    for index, i in enumerate(indices):
+        if index not in [15, 28, 61]:
+            continue
+
         print(f'Iteration {index}')
-        i = indices[index]
 
         for e in range(1, 4):
             future = eng.verify(
