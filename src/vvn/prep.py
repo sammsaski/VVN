@@ -10,12 +10,11 @@ from typing import List
 import numpy as np
 
 # local modules
-from vvnconfig import Config
+from vvn.config import Config
 
 # define global variables
-PATH_TO_MODELS = ''
-PATH_TO_TEST_DATA = ''
-PATH_TO_TEST_LABELS = ''
+PATH_TO_MODELS = os.path.join(os.getcwd(), 'models')
+PATH_TO_DATA = os.path.join(os.getcwd(), 'data', 'ZoomOut', 'test')
 
 # set seed
 random.seed(42)
@@ -61,25 +60,59 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
 
     return fp if parent_only else os.path.join(fp, filename) + '.csv'
 
-# TODO: need to run inference on whole test set to make sure
-#       we are verifying samples that are originally correctly classified
-def get_correct_samples(modelpath, datapath, labelpath) -> List[int]:
-    # load the data + labels
-    data = np.load(datapath)
-    labels = np.load(labelpath)
+# TODO: check that the output from the models is the exact same
+#       whether in python or matlab
+def get_correct_samples(ds_type, sample_len, modelpath, datapath) -> List[int]:
+    # check that sample_len is the correct type
+    sample_len = str(sample_len)
+    
+    # load the data + labels; example : mnistvideo_zoom_out_4f_test_dat_seq.npy
+    data = np.load(os.path.join(datapath, f'mnistvideo_{ds_type}_{sample_len}f_test_data_seq.npy'))
+    labels = np.load(os.path.join(datapath, f'mnistvideo_{ds_type}_test_labels_seq.npy'))
+
+    # specify model
+    model_ds_type = ds_type.replace('_', '')
+    modelpath = os.path.join(modelpath, f'{model_ds_type}_{sample_len}f.onnx')
 
     # load the model + start onnx runtime session
     session = onnxruntime.InferenceSession(modelpath)
 
-    # run inference
-    outputs = session.run(None, {input_name: data})
-    
-    # return the correctly classified samples
+    # specify input name for inference
+    input_name = session.get_inputs()[0].name
 
-def generate_indices(sample_gen_type, labels, class_size) -> List[int]:
+    # run inference
+    model_outputs = []
+
+    for i in range(data.shape[0]):
+        sample = data[i:i+1]
+        sample = sample.transpose(0, 2, 1, 3, 4)
+        output = session.run(None, {input_name: sample})
+        model_outputs.append(output[0])
+
+    # convert model_outputs from logits for each class to prediction
+    model_outputs = [np.argmax(model_outputs[i], axis=1) for i in range(data.shape[0])]
+    
+    # get the true labels and compare them to the outputs
+    labels = labels.astype(int).tolist()
+
+    # filter for only correctly classified samples
+    return [i for i in range(data.shape[0]) if model_outputs[i] == labels[i]]
+
+def generate_indices(config) -> List[int]:
+    # unpack config settings
+    sample_gen_type = config.sample_gen_type
+    class_size = config.class_size
+    ds_type = config.ds_type
+    sample_len = config.sample_len
+
     # randomly generate indices of samples to verify from test set
     if sample_gen_type == 'random':
-        indices = defaultdict(list, {value: [i for i, v in enumerate(labels) if v == value] for value in set(labels)})
+
+        # get the indices of all correctly classified samples
+        correct_samples = get_correct_samples(ds_type, sample_len, PATH_TO_MODELS, PATH_TO_DATA)
+
+        # partition the correctly classified samples by class
+        indices = defaultdict(list, {value: [i for i in correct_samples] for value in range(0, 9)})
 
         # TODO: unpack this so its just a list and not a list of lists
         return [random.sample(indices[class_label], class_size) for class_label in indices.keys()]
@@ -87,3 +120,24 @@ def generate_indices(sample_gen_type, labels, class_size) -> List[int]:
     # inorder generation of indices of samples to verify from test set 
     else:
         pass 
+
+if __name__ == "__main__":
+    pass 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
