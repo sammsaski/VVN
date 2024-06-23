@@ -17,7 +17,7 @@ NNV_PATH = os.path.join(PARENT_PATH, 'nnv')
 NPY_MATLAB_PATH = os.path.join(PARENT_PATH, 'npy-matlab', 'npy-matlab')
 
 # TODO: Write docstrings
-def prepare_engine(nnv_path, npy_matlab_path) -> matlab.engine.Engine:
+def prepare_engine(nnv_path, npy_matlab_path):
     if not nnv_path or not npy_matlab_path:
         raise Exception('One of nnv_path or npy_matlab_path is not defined. Please ensure these have been set before running.')
 
@@ -33,7 +33,7 @@ def prepare_engine(nnv_path, npy_matlab_path) -> matlab.engine.Engine:
     # save reference to it for calling matlab scripts to engine later
     return eng
 
-def verify(ds_type, sample_len, attack_type, eng, index, eps_index) -> Tuple[int, float | str, str]:
+def verify(ds_type, sample_len, attack_type, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
     # check that MATLAB engine was started correctly and is accessible
     if not eng:
         raise Exception('MATLAB Engine was not correctly started and shared. Please make sure to run `prepare_engine`.')
@@ -56,7 +56,12 @@ def verify(ds_type, sample_len, attack_type, eng, index, eps_index) -> Tuple[int
 
 def run(config) -> None:
     # Unpack configuration settings;
-    locals().update(config)
+    epsilon = config.epsilon
+    timeout = config.timeout
+    
+    ds_type = config.ds_type
+    sample_len = config.sample_len
+    attack_type = config.attack_type
 
     print(f'Running verification with config: dataset type={ds_type}, video length={sample_len}') 
 
@@ -85,7 +90,7 @@ def run(config) -> None:
             output_file = vp.build_output_filepath(config=config, filename=str(eps))
 
             # verify the sample with a specific epsilon value
-            res, t, met = verify(ds_type, sample_len, attack_type, eng, index, eps_index)
+            res, t, met = verify(ds_type, sample_len, attack_type, eng, index, eps_index, timeout)
 
             # write the results
             write_results(output_file, sample_num, res, t, met)

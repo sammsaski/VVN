@@ -1,7 +1,7 @@
 import os
 import vvn.prep as vp
 import vvn.verify as vvn
-from vnn.config import Config
+from vvn.config import Config
 
 
 if __name__ == "__main__":

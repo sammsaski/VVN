@@ -21,7 +21,7 @@ random.seed(42)
 
 def prepare_filetree(config: Config):
     # TODO: come up with a more flexible way to do this
-    # create all directories/files for each type of experiment being run
+    # create all directories for each type of experiment being run
     for sgt in ['random', 'inorder']: 
         for at in ['single_frame', 'all_frames']:
             for dst in ['zoom_in', 'zoom_out']:
@@ -30,11 +30,19 @@ def prepare_filetree(config: Config):
                         fp = build_output_filepath(config, eps_filename)
 
                         # create the parent directories if they don't already exist
-                        os.makedirs(os.path.join(output_dir, sgt, at, dst, length), exist_ok=True)
+                        os.makedirs(os.path.join(config.output_dir, sgt, at, dst, length), exist_ok=True)
+
+    # make the results files once we know all directories have been made
+    for sgt in ['random', 'inorder']:
+        for at in ['single_frame', 'all_frames']:
+            for dst in ['zoom_in', 'zoom_out']:
+                for length in ['4', '8', '16']:
+                    for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
+                        fp = build_output_filepath(config, eps_filename)
 
                         # if the file doesn't exist yet, create it
                         if not os.path.isfile(fp):
-                            with open(fp, 'a', newline='') as f:
+                            with open(fp, 'w', newline='') as f:
                                 # write CSV headers
                                 writer = csv.writer(f)
                                 writer.writerow(['Sample Number', 'Result', 'Time', 'Method'])

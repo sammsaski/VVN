@@ -1,5 +1,5 @@
 import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import List, Literal, Self
 
 
@@ -39,6 +39,6 @@ class Config:
             
             # should be safe to handle everything else
             elif not isinstance(value, str):
-                setattr(self, f.name, str(value))
+                setattr(config, f.name, str(value))
 
         return config
