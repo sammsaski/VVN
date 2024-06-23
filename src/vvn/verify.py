@@ -1,5 +1,6 @@
 # python standard libray
 import csv
+import io
 import os
 from typing import Tuple
 
@@ -39,7 +40,7 @@ def verify(ds_type, sample_len, attack_type, eng, index, eps_index, timeout) -> 
         raise Exception('MATLAB Engine was not correctly started and shared. Please make sure to run `prepare_engine`.')
 
     # call to MATLAB script to run verification
-    future = eng.verify(ds_type, sample_len, attack_type, index, eps_index, nargout=3, background=True)
+    future = eng.verifyvideo(ds_type, sample_len, attack_type, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
 
     try:
         [res, t, met] = future.result(timeout=float(timeout))

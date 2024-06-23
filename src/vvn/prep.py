@@ -1,5 +1,6 @@
 # python standard library
 import csv
+import itertools
 import onnxruntime
 import os
 import random
@@ -126,8 +127,11 @@ def generate_indices(config) -> List[int]:
         # partition the correctly classified samples by class
         indices = defaultdict(list, {value: [i for i in correct_samples] for value in range(0, 9)})
 
-        # TODO: unpack this so its just a list and not a list of lists
-        return [random.sample(indices[class_label], class_size) for class_label in indices.keys()]
+        # randomly sample 10 of the correctly classified samples per class
+        indices = [random.sample(indices[class_label], class_size) for class_label in indices.keys()]
+
+        # flatten the list before returning
+        return list(itertools.chain(*indices))
 
     # inorder generation of indices of samples to verify from test set 
     else:

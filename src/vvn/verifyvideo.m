@@ -1,4 +1,4 @@
-function [res, time, met] = verify(dsVar, smpLen, attackType, index, epsIndex)
+function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, index, epsIndex)
     %
     % dsVar (string)      : the dataset type. either "zoom_in" or "zoom_out".
     % smpLen (int)        : the length of a sample (video) in the dataset. either 4, 8, or 16.
@@ -39,8 +39,10 @@ function [res, time, met] = verify(dsVar, smpLen, attackType, index, epsIndex)
     fprintf("Running robustness verification on %s dataset...", dsVarCaps);
 
     % Load data
-    data = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
-    labels = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
+    % data = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
+    data = readNPY(sprintf("data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
+    % labels = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
+    labels = readNPY(sprintf("data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
 
     % Preprocessing
     reshaped_data = permute(data, [1, 3, 2, 4, 5]); % to match BCSSS
@@ -59,7 +61,8 @@ function [res, time, met] = verify(dsVar, smpLen, attackType, index, epsIndex)
 
     % Load the model
     modelName = sprintf("%s_%df.onnx", dsVarShort, smpLen);
-    netonnx = importONNXNetwork("../../models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
+    % netonnx = importONNXNetwork("../../models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
+    netonnx = importONNXNetwork("models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
     net = matlab2nnv(netonnx);
     net.OutputSize = numClasses;
     disp("Finished loading model: " + modelName);
