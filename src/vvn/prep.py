@@ -80,7 +80,7 @@ def get_correct_samples(ds_type, sample_len, modelpath, datapath) -> List[int]:
     
     # load the data + labels; example : VVN/data/ZoomOut/test/mnistvideo_zoom_out_4f_test_dat_seq.npy
     data = np.load(os.path.join(datapath, alt_ds_type, 'test', f'mnistvideo_{ds_type}_{sample_len}f_test_data_seq.npy'))
-    labels = np.load(os.path.join(datapath, f'mnistvideo_{ds_type}_test_labels_seq.npy'))
+    labels = np.load(os.path.join(datapath, alt_ds_type, 'test', f'mnistvideo_{ds_type}_test_labels_seq.npy'))
 
     # specify model
     model_ds_type = ds_type.replace('_', '')
