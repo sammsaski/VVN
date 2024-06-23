@@ -119,7 +119,7 @@ def summarize(output_file_dir):
         average_time = np.mean(data[:, 1])
 
         # display the results
-        results_header_str = f'Results of verification with {filename.split('.')[0]}'
+        results_header_str = f'Results of verification with {filename.split(".")[0]}'
         total_verified_str = f'Verified {total_verified} robust samples out of {100}.'
         average_time_str = f'Average running time was : {average_time}.'
         rowlength = max(len(total_verified_str), len(average_time_str), len(results_header_str))
