@@ -1,2 +1,9 @@
-*.asv
 .DS_Store
+
+# don't commit the data
+*data/ZoomIn*
+*data/ZoomOut*
+
+# matlab stuff
+*.asv
+*tbxmanager*
