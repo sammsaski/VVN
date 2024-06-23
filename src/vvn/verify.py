@@ -110,14 +110,7 @@ def summarize(output_file_dir):
         fp = os.path.join(output_file_dir, filename)
 
         # open the results csv file
-        data = np.genfromtxt(
-            fp, 
-            delimiter=',', 
-            skip_header=1, 
-            dtype=None, 
-            encoding=None,
-            converters={1: lambda s: 3600 if s == 'timeout' else float(s)}
-        )
+        data = np.genfromtxt(fp, delimiter=',', skip_header=1, dtype=None, converters={1: lambda s: 3600 if s == 'timeout' else float(s)})
         
         # count the number of verified samples
         total_verified = np.sum(data[:, 0] == 1)
@@ -127,8 +120,8 @@ def summarize(output_file_dir):
 
         # display the results
         results_header_str = f'Results of verification with {filename.split('.')[0]}'
-        total_verified_str = f'Verified {total_verified} robust samples out of {100}.')
-        average_time_str = f'Average running time was : {average_time}.')
+        total_verified_str = f'Verified {total_verified} robust samples out of {100}.'
+        average_time_str = f'Average running time was : {average_time}.'
         rowlength = max(len(total_verified_str), len(average_time_str), len(results_header_str))
         print('-'*rowlength)
         print(results_header_str)
