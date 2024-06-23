@@ -14,7 +14,7 @@ from vvn.config import Config
 
 # define global variables
 PATH_TO_MODELS = os.path.join(os.getcwd(), 'models')
-PATH_TO_DATA = os.path.join(os.getcwd(), 'data', 'ZoomOut', 'test')
+PATH_TO_DATA = os.path.join(os.getcwd(), 'data')
 
 # set seed
 random.seed(42)
@@ -63,11 +63,13 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
 # TODO: check that the output from the models is the exact same
 #       whether in python or matlab
 def get_correct_samples(ds_type, sample_len, modelpath, datapath) -> List[int]:
-    # check that sample_len is the correct type
+    # check that ds_type + sample_len are the correct types/values
+    # TODO: consider making data directory naming more consistent
+    ds_type = "ZoomIn" if ds_type == "zoom_in" else "ZoomOut" # have to convert because of naming conventions
     sample_len = str(sample_len)
     
-    # load the data + labels; example : mnistvideo_zoom_out_4f_test_dat_seq.npy
-    data = np.load(os.path.join(datapath, f'mnistvideo_{ds_type}_{sample_len}f_test_data_seq.npy'))
+    # load the data + labels; example : VVN/data/ZoomOut/test/mnistvideo_zoom_out_4f_test_dat_seq.npy
+    data = np.load(os.path.join(datapath, ds_type, 'test', f'mnistvideo_{ds_type}_{sample_len}f_test_data_seq.npy'))
     labels = np.load(os.path.join(datapath, f'mnistvideo_{ds_type}_test_labels_seq.npy'))
 
     # specify model

@@ -1,8 +1,10 @@
-function [res, time, met] = verify(dsVar, smpLen, vType, index, iterationNum, epsIndex)
+function [res, time, met] = verify(dsVar, smpLen, attackType, index, epsIndex)
     %
-    % dsVar (string) : the dataset type. either "zoom_in" or "zoom_out".
-    % smpLen (int): the length of a sample (video) in the dataset. either 4, 8, or 16.
-    % vType (string) : the type of video verification. either "single_frame" or "all_frames".
+    % dsVar (string)      : the dataset type. either "zoom_in" or "zoom_out".
+    % smpLen (int)        : the length of a sample (video) in the dataset. either 4, 8, or 16.
+    % attackType (string) : the type of video verification. either "single_frame" or "all_frames".
+    % index (int)         : the index into the dataset to get the targeted sample to verify.
+    % epsIndex (int)      : to help us select the epsilon value we would like to use for the attack.
     %
 
     % Check input arguments first.
@@ -16,8 +18,8 @@ function [res, time, met] = verify(dsVar, smpLen, vType, index, iterationNum, ep
         return
     end
 
-    if vType ~= "single_frame" && vType ~= "all_frames"
-        printf("vType argument was invalid. Must be 'single_frame' or 'all_frames'.")
+    if attackType ~= "single_frame" && attackType ~= "all_frames"
+        printf("attackType argument was invalid. Must be 'single_frame' or 'all_frames'.")
         return
     end
 
@@ -35,10 +37,6 @@ function [res, time, met] = verify(dsVar, smpLen, vType, index, iterationNum, ep
     
 
     fprintf("Running robustness verification on %s dataset...", dsVarCaps);
-
-    % if ~exist(sprintf("../../results/all_frames/%s/", dsVarCaps), "dir") % can "dir" be double quotes? it was apostrophes
-    %     mkdir(sprintf("../../results/all_frames/%s", dsVarCaps));
-    % end
 
     % Load data
     data = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
@@ -75,18 +73,6 @@ function [res, time, met] = verify(dsVar, smpLen, vType, index, iterationNum, ep
     % samples
     outputLabels = zeros(length(datacopy));
 
-    % for i=1:length(datacopy)
-    %     s = datacopy(i,:,:,:);
-    %     s = squeeze(s);
-    %     l = labels(i)+1; % convert from 0 to 1 indexing
-    % 
-    %     outputs = net.evaluate(s);
-    %     [~, P] = max(outputs);
-    % 
-    %     % Add the prediction to the set of outputs on all samples
-    %     outputLabels(i) = P;
-    % end
-
     s = datacopy(index,:,:,:);
     s = squeeze(s);
     l = labels(index) + 1;
@@ -94,23 +80,13 @@ function [res, time, met] = verify(dsVar, smpLen, vType, index, iterationNum, ep
     output = net.evaluate(s);
     [~, P] = max(output);
 
-    fprintf("\n output : %d, true label: %d\n", P, l);
-
-
-    % fprintf("\n");
-    % disp(outputLabels);
-    % fprintf("\n");
-
-    % INDICES
-    % ind = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 91, 92, 95, 98, 100, 101, 103, 104, 105, 108, 129, 131, 133, 134, 135, 136, 137, 140, 143, 144, 145, 146, 147, 148, 149, 150, 152, 156, 157, 158, 159, 160, 161, 162, 163, 165, 166, 167, 169, 176, 272, 282, 285, 287, 288, 289, 290, 291, 292, 293, 295, 299, 300, 301, 304, 305, 309, 316, 320, 328, 330, 331, 332, 335, 336, 345, 368, 380, 395, 422, 573, 576, 579, 581, 600, 605, 607, 618, 628, 632, 822, 823, 825, 834, 838, 848, 863, 866, 870, 872];
-
     %%%%%%%%%%%%%%%%
     % VERIFICATION %
     %%%%%%%%%%%%%%%%
 
-    fprintf('Starting verification with epsilon %d \n', epsilon(1));
     eps = epsilon(epsIndex);
-
+    fprintf('Starting verification with epsilon %d \n', eps);
+    
     % Get the sample
     sample = squeeze(datacopy(index,:,:,:));
     
@@ -132,12 +108,12 @@ function [res, time, met] = verify(dsVar, smpLen, vType, index, iterationNum, ep
     end
 
     % NEED THIS HERE SO MET EXISTS
-    metValue = "relax";
+    met = "relax";
 
     if any(predictedLabels ~= labels(index)+1)
-        resValue = 0;
-        timeValue = toc(t);
-        metValue = "counterexample";
+        res = 0;
+        time = toc(t);
+        met = "counterexample";
     else
         try
             temp = net.verify_robustness(VS, reachOptions, labels(index)+1);
@@ -145,32 +121,17 @@ function [res, time, met] = verify(dsVar, smpLen, vType, index, iterationNum, ep
                 reachOptions = struct;
                 reachOptions.reachMethod = 'approx-star';
                 temp = net.verify_robustness(VS, reachOptions, labels(index)+1);
-                metValue = 'approx';
+                met = 'approx';
             end
     
         catch ME
-            metValue = ME.message;
+            met = ME.message;
             temp = -1;
         end
     
-        resValue = temp;
-        timeValue = toc(t);
+        res = temp;
+        time = toc(t);
     end
-
-    % Load the result arrays
-    resultsArrays = load(sprintf("../../results/%s/%s/%df", vType, dsVarCaps, smpLen));
-
-    % Modify them with the new results
-    res = resultsArrays.res;
-    res(iterationNum, epsIndex) = resValue;
-
-    time = resultsArrays.time;
-    time(iterationNum, epsIndex) = timeValue;
-
-    met = resultsArrays.met;
-    met(iterationNum, epsIndex) = metValue;
-
-    save(sprintf("../../results/%s/%s/%df", vType, dsVarCaps, smpLen), "res", "time", "epsilon", "met");
 end
 
 %% Helper Functions
