@@ -11,10 +11,10 @@ import numpy as np
 import vvn.prep as vp
 from vvn.config import Config
 
-
 # define global variables
-NNV_PATH = ''
-NPY_MATLAB_PATH = ''
+PARENT_PATH = os.path.dirname(os.getcwd())
+NNV_PATH = os.path.join(PARENT_PATH, 'nnv')
+NPY_MATLAB_PATH = os.path.join(PARENT_PATH, 'npy-matlab', 'npy-matlab')
 
 # TODO: Write docstrings
 def prepare_engine(nnv_path, npy_matlab_path) -> matlab.engine.Engine:
@@ -67,7 +67,7 @@ def run(config) -> None:
     eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH)
 
     # generate indices
-    indices = vp.generate_indices(sample_gen_type, labels, class_size)
+    indices = vp.generate_indices(config)
 
     # start verification
     for sample_num, index in enumerate(indices):
@@ -90,6 +90,9 @@ def run(config) -> None:
             # write the results
             write_results(output_file, sample_num, res, t, met)
 
+    # print verification summary
+    summarize(vp.build_output_filepath(config=config, parent_only=True))
+
     # close matlab after experiment finishes
     eng.quit()
 
@@ -102,18 +105,46 @@ def write_results(output_file, sample_num, res, t, met):
         writer = csv.writer(f)
         writer.writerow([sample_num, res, t, met])
 
+def summarize(output_file_dir):
+    for filename in os.listdir(output_file_dir):
+        fp = os.path.join(output_file_dir, filename)
+
+        # open the results csv file
+        data = np.genfromtxt(
+            fp, 
+            delimiter=',', 
+            skip_header=1, 
+            dtype=None, 
+            encoding=None,
+            converters={1: lambda s: 3600 if s == 'timeout' else float(s)}
+        )
+        
+        # count the number of verified samples
+        total_verified = np.sum(data[:, 0] == 1)
+
+        # calculate average time to verify
+        average_time = np.mean(data[:, 1])
+
+        # display the results
+        results_header_str = f'Results of verification with {filename.split('.')[0]}'
+        total_verified_str = f'Verified {total_verified} robust samples out of {100}.')
+        average_time_str = f'Average running time was : {average_time}.')
+        rowlength = max(len(total_verified_str), len(average_time_str), len(results_header_str))
+        print('-'*rowlength)
+        print(results_header_str)
+        print('---')
+        print(total_verified_str)
+        print('---')
+        print(average_time_str)
+        print('-'*rowlength)
+
 
 if __name__ == "__main__":
-    # load the labels for defining the subset of samples to verify
-    labels = np.load('')
-    labels = labels.astype(int).tolist()
-
     # example config
     config = Config(
         sample_gen_type='random',
         class_size=10,
         epsilon=[1/255, 2/255, 3/255],
-        labels=labels,
         ds_type='zoom_in',
         sample_len=16,
         attack_type='all_frames',

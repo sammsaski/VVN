@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 from typing import List, Literal, Self
 
@@ -6,10 +7,10 @@ from typing import List, Literal, Self
 class Config:
     # Experimental settings
     sample_gen_type: Literal['random', 'inorder']
-    class_size: int # 10 samples per class 
-    epsilon: List # [1/255, 2/255, 3/255]
+    class_size: int # 10 samples per class
+    # TODO: find a way to make sure that possible epsilon values is consistent between matlab + python
+    epsilon: List # [1/255, 2/255, 3/255] 
     timeout: int # 3600 (s)
-    labels: List # list of labels from the dataset
     output_dir: str # /path/to/VVN/results 
 
     # Verification settings

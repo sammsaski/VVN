@@ -22,21 +22,22 @@ random.seed(42)
 def prepare_filetree(config: Config):
     # TODO: come up with a more flexible way to do this
     # create all directories/files for each type of experiment being run
-    for sgt in ['random', 'inorder']:
-        for dst in ['zoom_in', 'zoom_out']:
-            for length in ['4', '8', '16']:
-                for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
-                    fp = build_output_filepath(config, eps_filename)
+    for sgt in ['random', 'inorder']: 
+        for at in ['single_frame', 'all_frames']:
+            for dst in ['zoom_in', 'zoom_out']:
+                for length in ['4', '8', '16']:
+                    for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
+                        fp = build_output_filepath(config, eps_filename)
 
-                    # create the parent directories if they don't already exist
-                    os.makedirs(os.path.join(output_dir, sgt, dst, length), exist_ok=True)
+                        # create the parent directories if they don't already exist
+                        os.makedirs(os.path.join(output_dir, sgt, at, dst, length), exist_ok=True)
 
-                    # if the file doesn't exist yet, create it
-                    if not os.path.isfile(fp):
-                        with open(fp, 'a', newline='') as f:
-                            # write CSV headers
-                            writer = csv.writer(f)
-                            writer.writerow(['Sample Number', 'Result', 'Time', 'Method'])
+                        # if the file doesn't exist yet, create it
+                        if not os.path.isfile(fp):
+                            with open(fp, 'a', newline='') as f:
+                                # write CSV headers
+                                writer = csv.writer(f)
+                                writer.writerow(['Sample Number', 'Result', 'Time', 'Method'])
 
 def build_output_filepath(config: Config, filename=None, parent_only=False):
     """
@@ -53,10 +54,11 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
     # get the values we need for building the output filepath
     output_dir = str_config.output_dir
     sgt = str_config.sample_gen_type
+    attack_type = str_config.attack_type
     dst = str_config.ds_type
     length = str_config.sample_len
 
-    fp = os.path.join(output_dir, sgt, dst, length)
+    fp = os.path.join(output_dir, sgt, attack_type, dst, length)
 
     return fp if parent_only else os.path.join(fp, filename) + '.csv'
 
