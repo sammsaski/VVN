@@ -113,26 +113,31 @@ def summarize(output_file_dir):
         fp = os.path.join(output_file_dir, filename)
 
         # open the results csv file
-        data = np.genfromtxt(fp, delimiter=',', skip_header=1, dtype=None, converters={1: lambda s: 3600 if s == 'timeout' else float(s)})
-        
+        data = np.genfromtxt(fp, delimiter=',', skip_header=1, dtype=None, converters={1: lambda s: 3600.0 if s == 'timeout' else float(s)})
+        # potential fix for converters if swapping 'timeout' is not working
+        # converter={1: lambda s: 3600.0 if s.decode('utf-8') == 'timeout' else float(s)}
+
+        res = np.array([row[1] for row in data])
+        t = np.array([row[2] for row in data])
+
         # count the number of verified samples
-        total_verified = np.sum(data[:, 0] == 1)
+        total_verified = np.sum(res[res == 1])
 
         # calculate average time to verify
-        average_time = np.mean(data[:, 1])
+        average_time = np.mean(t)
 
         # display the results
         results_header_str = f'Results of verification with {filename.split(".")[0]}'
-        total_verified_str = f'Verified {total_verified} robust samples out of {100}.'
+        total_verified_str = f'Verified {int(total_verified)} robust samples out of {100}.'
         average_time_str = f'Average running time was : {average_time}.'
         rowlength = max(len(total_verified_str), len(average_time_str), len(results_header_str))
-        print('-'*rowlength)
+        print('='*rowlength)
         print(results_header_str)
         print('---')
         print(total_verified_str)
         print('---')
         print(average_time_str)
-        print('-'*rowlength)
+        print('='*rowlength)
 
 
 if __name__ == "__main__":
