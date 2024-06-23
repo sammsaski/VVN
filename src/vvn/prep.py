@@ -125,7 +125,7 @@ def generate_indices(config) -> List[int]:
         correct_samples = get_correct_samples(ds_type, sample_len, PATH_TO_MODELS, PATH_TO_DATA)
 
         # partition the correctly classified samples by class
-        indices = defaultdict(list, {value: [i for i in correct_samples] for value in range(0, 9)})
+        indices = defaultdict(list, {value: [i for i in correct_samples] for value in range(0, 10)})
 
         # randomly sample 10 of the correctly classified samples per class
         indices = [random.sample(indices[class_label], class_size) for class_label in indices.keys()]

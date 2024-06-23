@@ -81,14 +81,11 @@ def run(config) -> None:
 
         # select epsilon
         for eps_index in range(1, len(epsilon) + 1):
-            # get epsilon for output file naming
-            # have to subtract 1 because we had to add one for matlab 1-indexing
-            eps = epsilon[eps_index - 1] 
-
+            # TODO: normalize naming convention for results files
             # build the output file
             # for naming convention, we will use the
-            # epsilon value for filename
-            output_file = vp.build_output_filepath(config=config, filename=str(eps))
+            # epsilon value for filename -- example filename : eps=1_255
+            output_file = vp.build_output_filepath(config=config, filename=f'eps={eps_index}_255')
 
             # verify the sample with a specific epsilon value
             res, t, met = verify(ds_type, sample_len, attack_type, eng, index, eps_index, timeout)
