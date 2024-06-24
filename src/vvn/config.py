@@ -17,6 +17,7 @@ class Config:
     ds_type: Literal['zoom_in', 'zoom_out'] # might need to change this to ZoomIn/ZoomOut
     sample_len: Literal[4, 8, 16] # length of videos in number of frames
     attack_type: Literal['single_frame', 'all_frames'] # whether we attack all frames or a subset
+    ver_algorithm: Literal['relax', 'approx'] # types of verification algorithms to use
 
     def update(self, **kwargs):
         for k, v in kwargs.items():

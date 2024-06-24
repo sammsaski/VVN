@@ -1,8 +1,9 @@
-function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, index, epsIndex)
+function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, verAlg, index, epsIndex)
     %
     % dsVar (string)      : the dataset type. either "zoom_in" or "zoom_out".
     % smpLen (int)        : the length of a sample (video) in the dataset. either 4, 8, or 16.
     % attackType (string) : the type of video verification. either "single_frame" or "all_frames".
+    % verAlg (string)     : the verification algorithm to use. either "relax" or "approx".
     % index (int)         : the index into the dataset to get the targeted sample to verify.
     % epsIndex (int)      : to help us select the epsilon value we would like to use for the attack.
     %
@@ -20,6 +21,11 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, index, epsInd
 
     if attackType ~= "single_frame" && attackType ~= "all_frames"
         printf("attackType argument was invalid. Must be 'single_frame' or 'all_frames'.")
+        return
+    end
+
+    if verAlg ~= "relax" && verAlg ~= "approx"
+        printf("verAlg argument was invalid. Must be 'relax' or 'approx'.")
         return
     end
 
@@ -69,9 +75,13 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, index, epsInd
 
     % Verification settings
     reachOptions = struct;
-    reachOptions.reachMethod = 'relax-star-area';
-    reachOptions.relaxFactor = 0.5;
-
+    if verAlg == "relax"
+        reachOptions.reachMethod = "relax-star-area";
+        reachOptions.relaxFactor = 0.5;
+    elseif verAlg == "approx"
+        reachOptions.reachMethod = "approx-star";
+    end
+    
     % Make predictions on test set to check that we are verifying correct
     % samples
     outputLabels = zeros(length(datacopy));
@@ -111,7 +121,7 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, index, epsInd
     end
 
     % NEED THIS HERE SO MET EXISTS
-    met = "relax";
+    met = verAlg;
 
     if any(predictedLabels ~= labels(index)+1)
         res = 0;
@@ -119,14 +129,9 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, index, epsInd
         met = "counterexample";
     else
         try
+            % run verification algorithm
             temp = net.verify_robustness(VS, reachOptions, labels(index)+1);
-            if temp ~= 1 && temp ~= 0
-                reachOptions = struct;
-                reachOptions.reachMethod = 'approx-star';
-                temp = net.verify_robustness(VS, reachOptions, labels(index)+1);
-                met = 'approx';
-            end
-    
+                
         catch ME
             met = ME.message;
             temp = -1;

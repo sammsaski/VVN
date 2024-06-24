@@ -26,27 +26,29 @@ def prepare_filetree(config: Config):
     for sgt in ['random', 'inorder']: 
         for at in ['single_frame', 'all_frames']:
             for dst in ['zoom_in', 'zoom_out']:
-                for length in ['4', '8', '16']:
-                    for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
-                        fp = build_output_filepath(config, eps_filename)
+                for va in ['relax', 'approx']:
+                    for length in ['4', '8', '16']:
+                        for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
+                            fp = build_output_filepath(config, eps_filename)
 
-                        # create the parent directories if they don't already exist
-                        os.makedirs(os.path.join(config.output_dir, sgt, at, dst, length), exist_ok=True)
+                            # create the parent directories if they don't already exist
+                            os.makedirs(os.path.join(config.output_dir, sgt, at, dst, va, length), exist_ok=True)
 
     # make the results files once we know all directories have been made
     for sgt in ['random', 'inorder']:
         for at in ['single_frame', 'all_frames']:
             for dst in ['zoom_in', 'zoom_out']:
-                for length in ['4', '8', '16']:
-                    for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
-                        fp = build_output_filepath(config, eps_filename)
+                for va in ['relax', 'approx']:
+                    for length in ['4', '8', '16']:
+                        for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
+                            fp = build_output_filepath(config, eps_filename)
 
-                        # if the file doesn't exist yet, create it
-                        if not os.path.isfile(fp):
-                            with open(fp, 'w', newline='') as f:
-                                # write CSV headers
-                                writer = csv.writer(f)
-                                writer.writerow(['Sample Number', 'Result', 'Time', 'Method'])
+                            # if the file doesn't exist yet, create it
+                            if not os.path.isfile(fp):
+                                with open(fp, 'w', newline='') as f:
+                                    # write CSV headers
+                                    writer = csv.writer(f)
+                                    writer.writerow(['Sample Number', 'Result', 'Time', 'Method'])
 
 def build_output_filepath(config: Config, filename=None, parent_only=False):
     """
@@ -65,9 +67,10 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
     sgt = str_config.sample_gen_type
     attack_type = str_config.attack_type
     dst = str_config.ds_type
+    va = str_config.ver_algorithm
     length = str_config.sample_len
 
-    fp = os.path.join(output_dir, sgt, attack_type, dst, length)
+    fp = os.path.join(output_dir, sgt, attack_type, dst, va, length)
 
     return fp if parent_only else os.path.join(fp, filename) + '.csv'
 
@@ -131,7 +134,12 @@ def generate_indices(config) -> List[int]:
         indices = [random.sample(indices[class_label], class_size) for class_label in indices.keys()]
 
         # flatten the list before returning
-        return list(itertools.chain(*indices))
+        indices = list(itertools.chain(*indices))
+
+        # add 1 to all values of list because MATLAB uses 1-indexing
+        indices = [v + 1 for v in indices]
+
+        return indices
 
     # inorder generation of indices of samples to verify from test set 
     else:
