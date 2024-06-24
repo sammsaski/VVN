@@ -33,6 +33,7 @@ if __name__ == "__main__":
 
     # run experiment #4 : dataset = zoom out, video length = 8
     config.ds_type = 'zoom_out'
+    config.sample_len = 8 # had to add this because we commented out previous exp which changed it
     vvn.run(config=config)
 
     # run experiment #5 : dataset = zoom in, video length = 16
