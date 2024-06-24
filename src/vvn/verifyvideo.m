@@ -59,7 +59,6 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, verAlg, index
     numClasses = 10;
     n = 10; % Number of images to evaluate per class
     N = n * numClasses; % Total number of samples to evaluate
-    nR = 17; % Number of videos to sample
 
     % Size of attack
     epsilon = [1/255; 2/255; 3/255];
@@ -104,46 +103,27 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, verAlg, index
     sample = squeeze(datacopy(index,:,:,:));
     
     % Perform L_inf attack
-    [VS, xRand] = L_inf_attack(sample, eps, nR, smpLen);
+    [VS] = L_inf_attack(sample, eps, nR, smpLen);
     t = tic;
-
-    % Falsification
-    predictedLabels = zeros(nR+3, 1);
-    for j=1:length(predictedLabels)
-        s = xRand(:,:,:,j);
-        s = squeeze(s);
-    
-        outputs = net.evaluate(s);
-        [~, P] = max(outputs);
-    
-        % Add the prediction to the set of outputs on xRand
-        predictedLabels(j) = P;
-    end
 
     % NEED THIS HERE SO MET EXISTS
     met = verAlg;
-
-    if any(predictedLabels ~= labels(index)+1)
-        res = 0;
-        time = toc(t);
-        met = "counterexample";
-    else
-        try
-            % run verification algorithm
-            temp = net.verify_robustness(VS, reachOptions, labels(index)+1);
+ 
+    try
+        % run verification algorithm
+        temp = net.verify_robustness(VS, reachOptions, labels(index)+1);
                 
-        catch ME
-            met = ME.message;
-            temp = -1;
-        end
-    
-        res = temp;
-        time = toc(t);
+    catch ME
+        met = ME.message;
+        temp = -1;
     end
+    
+    res = temp;
+    time = toc(t);
 end
 
 %% Helper Functions
-function [VS, xRand] = L_inf_attack(x, epsilon, nR, numFrames)
+function [VS] = L_inf_attack(x, epsilon, nR, numFrames)
     lb = squeeze(x);
     ub = squeeze(x);
 
@@ -161,14 +141,4 @@ function [VS, xRand] = L_inf_attack(x, epsilon, nR, numFrames)
 
     % Create the volume star
     VS = VolumeStar(lb_clip, ub_clip);
-
-    % Create random images from initial set
-    lb = reshape(lb, [numFrames*32*32, 1]);
-    ub = reshape(ub, [numFrames*32*32, 1]);
-    xB = Box(single(lb), single(ub));
-    xRand = xB.sample(nR);
-    xRand = reshape(xRand, [numFrames, 32, 32, nR]);
-    xRand(:,:,:,nR+1) = x;
-    xRand(:,:,:,nR+2) = VS.vol_lb;
-    xRand(:,:,:,nR+3) = VS.vol_ub;
 end
