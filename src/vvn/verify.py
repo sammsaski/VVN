@@ -113,12 +113,24 @@ def summarize(output_file_dir):
         fp = os.path.join(output_file_dir, filename)
 
         # open the results csv file
-        data = np.genfromtxt(fp, delimiter=',', skip_header=1, dtype=None, converters={1: lambda s: 3600.0 if s == 'timeout' else float(s)})
-        # potential fix for converters if swapping 'timeout' is not working
-        # converter={1: lambda s: 3600.0 if s.decode('utf-8') == 'timeout' else float(s)}
+        with open(fp, 'r', newline='') as f:
+            reader = csv.reader(f, delimiter=',')
 
-        res = np.array([row[1] for row in data])
-        t = np.array([row[2] for row in data])
+            # skip the header
+            next(reader)
+
+            res = []
+            t = []
+
+            # read the values and build the new arrays for analysis
+            for row in reader:
+                res.append(row[1])
+                t.append(row[2] if not row[2] == 'timeout' else 3600.0)
+
+            # have to convert strings to valid floats before casting to int
+            res = np.array(res).astype(float)
+            res = np.array(res).astype(int)
+            t = np.array(t).astype(float)
 
         # count the number of verified samples
         total_verified = np.sum(res[res == 1])

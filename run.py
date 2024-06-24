@@ -20,16 +20,16 @@ if __name__ == "__main__":
     )
 
     # run experiment #1 : dataset = zoom in, video length = 4
-    vvn.run(config=config)
+    # vvn.run(config=config)
 
     # run experiment #2 : dataset = zoom out, video length = 4
-    config.ds_type = 'zoom_out'
-    vvn.run(config=config)
+    # config.ds_type = 'zoom_out'
+    # vvn.run(config=config)
 
     # run experiment #3 : dataset = zoom in , video length = 8
-    config.ds_type = 'zoom_in'
-    config.sample_len = 8
-    vvn.run(config=config)
+    # config.ds_type = 'zoom_in'
+    # config.sample_len = 8
+    # vvn.run(config=config)
 
     # run experiment #4 : dataset = zoom out, video length = 8
     config.ds_type = 'zoom_out'
