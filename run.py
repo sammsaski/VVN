@@ -1,5 +1,4 @@
 import os
-import vvn.prep as vp
 import vvn.verify as vvn
 from vvn.config import Config
 
@@ -20,20 +19,19 @@ if __name__ == "__main__":
     )
 
     # run experiment #1 : dataset = zoom in, video length = 4
-    # vvn.run(config=config)
+    vvn.run(config=config)
 
     # run experiment #2 : dataset = zoom out, video length = 4
-    # config.ds_type = 'zoom_out'
-    # vvn.run(config=config)
+    config.ds_type = 'zoom_out'
+    vvn.run(config=config)
 
     # run experiment #3 : dataset = zoom in , video length = 8
-    # config.ds_type = 'zoom_in'
-    # config.sample_len = 8
-    # vvn.run(config=config)
+    config.ds_type = 'zoom_in'
+    config.sample_len = 8
+    vvn.run(config=config)
 
     # run experiment #4 : dataset = zoom out, video length = 8
     config.ds_type = 'zoom_out'
-    config.sample_len = 8 # had to add this because we commented out previous exp which changed it
     vvn.run(config=config)
 
     # run experiment #5 : dataset = zoom in, video length = 16
