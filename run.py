@@ -1,4 +1,7 @@
 import os
+
+from numpy import indices
+import vvn.prep as vp
 import vvn.verify as vvn
 from vvn.config import Config
 
@@ -7,10 +10,7 @@ if __name__ == "__main__":
     # get the results dir
     output_dir = os.path.join(os.getcwd(), 'results')
 
-    # =====================================
-    # ============ RELAX ==================
-    # =====================================
-
+    # define the starting configuration 
     config = Config(
         sample_gen_type='random',
         class_size=10,
@@ -23,30 +23,37 @@ if __name__ == "__main__":
         output_dir=output_dir
     )
 
+    # get the samples you wish to verify
+    zoom_in_samples, zoom_out_samples = vp.generate_indices(config)
+
+    # =====================================
+    # ============ RELAX ==================
+    # =====================================
+
     # run experiment #1 : dataset = zoom in, video length = 4
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_in_samples)
 
     # run experiment #2 : dataset = zoom out, video length = 4
     config.ds_type = 'zoom_out'
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_out_samples)
 
     # run experiment #3 : dataset = zoom in , video length = 8
     config.ds_type = 'zoom_in'
     config.sample_len = 8
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_in_samples)
 
     # run experiment #4 : dataset = zoom out, video length = 8
     config.ds_type = 'zoom_out'
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_out_samples)
 
     # run experiment #5 : dataset = zoom in, video length = 16
     config.ds_type = 'zoom_in'
     config.sample_len = 16
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_in_samples)
 
     # run experiment #6 : dataset = zoom out, video length = 16
     config.ds_type = 'zoom_out'
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_out_samples)
 
 
     # =====================================
@@ -66,28 +73,27 @@ if __name__ == "__main__":
     )
 
     # run experiment #1 : dataset = zoom in, video length = 4
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_in_samples)
 
     # run experiment #2 : dataset = zoom out, video length = 4
     config.ds_type = 'zoom_out'
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_out_samples)
 
     # run experiment #3 : dataset = zoom in , video length = 8
     config.ds_type = 'zoom_in'
     config.sample_len = 8
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_in_samples)
 
     # run experiment #4 : dataset = zoom out, video length = 8
     config.ds_type = 'zoom_out'
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_out_samples)
 
     # run experiment #5 : dataset = zoom in, video length = 16
     config.ds_type = 'zoom_in'
     config.sample_len = 16
-    vvn.run(config=config)
+    vvn.run(config=config, indices=zoom_in_samples)
 
     # run experiment #6 : dataset = zoom out, video length = 16
     config.ds_type = 'zoom_out'
-    vvn.run(config=config)
-
+    vvn.run(config=config, indices=zoom_out_samples)
 

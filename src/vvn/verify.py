@@ -55,7 +55,7 @@ def verify(ds_type, sample_len, attack_type, ver_algorithm, eng, index, eps_inde
 
     return res, t, met
 
-def run(config) -> None:
+def run(config, indices) -> None:
     # Unpack configuration settings;
     epsilon = config.epsilon
     timeout = config.timeout
@@ -72,9 +72,6 @@ def run(config) -> None:
 
     # make sure matlab is started
     eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH)
-
-    # generate indices
-    indices = vp.generate_indices(config)
 
     # start verification
     for sample_num, index in enumerate(indices):

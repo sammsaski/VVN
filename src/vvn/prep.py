@@ -4,6 +4,7 @@ import itertools
 import onnxruntime
 import os
 import random
+from functools import reduce
 from collections import defaultdict
 from typing import List
 
@@ -76,74 +77,100 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
 
 # TODO: check that the output from the models is the exact same
 #       whether in python or matlab
-def get_correct_samples(ds_type, sample_len, modelpath, datapath) -> List[int]:
-    # check that ds_type + sample_len are the correct types/values
-    # TODO: consider making data directory naming more consistent (note that there exists ds_type, alt_ds_type, and model_ds_type)
-    alt_ds_type = "ZoomIn" if ds_type == "zoom_in" else "ZoomOut" # have to convert because of naming conventions
-    sample_len = str(sample_len)
-    
-    # load the data + labels; example : VVN/data/ZoomOut/test/mnistvideo_zoom_out_4f_test_dat_seq.npy
-    data = np.load(os.path.join(datapath, alt_ds_type, 'test', f'mnistvideo_{ds_type}_{sample_len}f_test_data_seq.npy'))
-    labels = np.load(os.path.join(datapath, alt_ds_type, 'test', f'mnistvideo_{ds_type}_test_labels_seq.npy'))
+def get_correct_samples(modelpath, datapath) -> tuple[list[int], list[int]]:
+    zoom_in_outputs = []
+    zoom_out_outputs = []
+    for dst in ['zoom_in', 'zoom_out']:
+        alt_dst = 'ZoomIn' if dst == 'zoom_in' else 'ZoomOut'
+        for sample_len in ['4', '8', '16']:
+            
+            # load the data + labels
+            data = np.load(os.path.join(datapath, alt_dst, 'test', f'mnistvideo_{dst}_{sample_len}f_test_data_seq.npy'))
+            labels = np.load(os.path.join(datapath, alt_dst, 'test', f'mnistvideo_{dst}_test_labels_seq.npy'))
 
-    # specify model
-    model_ds_type = ds_type.replace('_', '')
-    modelpath = os.path.join(modelpath, f'{model_ds_type}_{sample_len}f.onnx')
+            # select the model
+            model_dst = dst.replace('_', '')
+            model = os.path.join(modelpath, f'{model_dst}_{sample_len}f.onnx')
 
-    # load the model + start onnx runtime session
-    session = onnxruntime.InferenceSession(modelpath)
+            # load the model + start onnx runtime session
+            session = onnxruntime.InferenceSession(model)
 
-    # specify input name for inference
-    input_name = session.get_inputs()[0].name
+            # specify input name for inference
+            input_name = session.get_inputs()[0].name
 
-    # run inference
-    model_outputs = []
+            # run inference
+            model_outputs = []
 
-    for i in range(data.shape[0]):
-        sample = data[i:i+1]
-        sample = sample.transpose(0, 2, 1, 3, 4)
-        output = session.run(None, {input_name: sample})
-        model_outputs.append(output[0])
+            for i in range(data.shape[0]):
+                sample = data[i:i+1]
+                sample = sample.transpose(0, 2, 1, 3, 4)
+                output = session.run(None, {input_name: sample})
+                model_outputs.append(output[0])
+                
+            # convert model_outputs from logits for each class to prediction
+            model_outputs = [np.argmax(model_outputs[i], axis=1) for i in range(data.shape[0])]
 
-    # convert model_outputs from logits for each class to prediction
-    model_outputs = [np.argmax(model_outputs[i], axis=1) for i in range(data.shape[0])]
-    
-    # get the true labels and compare them to the outputs
-    labels = labels.astype(int).tolist()
+            # get the true labels and compare them to the outputs
+            labels = labels.astype(int).tolist()
+            
+            # filter for only correctly classified samples
+            correct_samples = [i for i in range(data.shape[0]) if model_outputs[i] == labels[i]]
+            
+            # add the model outputs to the corresponding list of correct samples
+            if dst == 'zoom_in':
+                zoom_in_outputs.append(correct_samples)
+            # dst == 'zoom_out'
+            else:
+                zoom_out_outputs.append(correct_samples)
 
-    # filter for only correctly classified samples
-    return [i for i in range(data.shape[0]) if model_outputs[i] == labels[i]]
+    # return only samples that are correctly classified by all models
+    zoom_in = list(reduce(lambda out, lst: out.intersection(lst), map(set, zoom_in_outputs)))
+    zoom_out = list(reduce(lambda out, lst: out.intersection(lst), map(set, zoom_out_outputs)))
 
-def generate_indices(config) -> List[int]:
+    return zoom_in, zoom_out
+
+
+def generate_indices(config) -> tuple[list[int], list[int]]:
     # unpack config settings
     sample_gen_type = config.sample_gen_type
     class_size = config.class_size
-    ds_type = config.ds_type
-    sample_len = config.sample_len
 
     # randomly generate indices of samples to verify from test set
     if sample_gen_type == 'random':
 
         # get the indices of all correctly classified samples
-        correct_samples = get_correct_samples(ds_type, sample_len, PATH_TO_MODELS, PATH_TO_DATA)
+        correct_zoom_in, correct_zoom_out = get_correct_samples(PATH_TO_MODELS, PATH_TO_DATA)
 
         # partition the correctly classified samples by class
-        indices = defaultdict(list, {value: [i for i in correct_samples] for value in range(0, 10)})
+        zoom_in_indices = defaultdict(list, {value: [i for i in correct_zoom_in] for value in range(0, 10)})
+        zoom_out_indices = defaultdict(list, {value: [i for i in correct_zoom_out] for value in range(0, 10)})
+
+        # check that there are atleast 10 correctly classified samples for each class
+        if not all(len(lst) >= class_size for lst in zoom_in_indices.values()):
+            raise Exception("Not enough correctly classified samples for 'zoom_in'.")
+        elif not all(len(lst) >= class_size for lst in zoom_out_indices.values()):
+            raise Exception("Not enough correctly classified samples for 'zoom_out'.")
 
         # randomly sample 10 of the correctly classified samples per class
-        indices = [random.sample(indices[class_label], class_size) for class_label in indices.keys()]
+        zoom_in_indices = [random.sample(zoom_in_indices[class_label], class_size) for class_label in zoom_in_indices.keys()]
+        zoom_out_indices = [random.sample(zoom_out_indices[class_label], class_size) for class_label in zoom_out_indices.keys()]
 
         # flatten the list before returning
-        indices = list(itertools.chain(*indices))
+        zoom_in_indices = list(itertools.chain(*zoom_in_indices))
+        zoom_out_indices = list(itertools.chain(*zoom_out_indices))
 
         # add 1 to all values of list because MATLAB uses 1-indexing
-        indices = [v + 1 for v in indices]
+        zoom_in_indices = [v + 1 for v in zoom_in_indices]
+        zoom_out_indices = [v + 1 for v in zoom_out_indices]
 
-        return indices
+        if len(zoom_in_indices) < class_size * 10 or len(zoom_out_indices) < class_size * 10:
+            raise Exception("Not enough correctly classified samples.")
+
+        return zoom_in_indices, zoom_out_indices 
 
     # inorder generation of indices of samples to verify from test set 
     else:
-        pass 
+        raise NotImplementedError("Inorder index generation has not been implemented yet. Please use 'random'.") 
 
 if __name__ == "__main__":
     pass 
