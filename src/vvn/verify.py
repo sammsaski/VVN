@@ -16,9 +16,10 @@ from vvn.config import Config
 PARENT_PATH = os.path.dirname(os.getcwd())
 NNV_PATH = os.path.join(PARENT_PATH, 'nnv')
 NPY_MATLAB_PATH = os.path.join(PARENT_PATH, 'npy-matlab', 'npy-matlab')
+GUROBI_PATH = '/Library/gurobi1102/macos_universal2/examples/matlab' # for macos
 
 # TODO: Write docstrings
-def prepare_engine(nnv_path, npy_matlab_path):
+def prepare_engine(nnv_path, npy_matlab_path, gurobi_path):
     if not nnv_path or not npy_matlab_path:
         raise Exception('One of nnv_path or npy_matlab_path is not defined. Please ensure these have been set before running.')
 
@@ -26,10 +27,11 @@ def prepare_engine(nnv_path, npy_matlab_path):
     eng = matlab.engine.start_matlab()
     print('started matlab engine!')
 
-    # add nnv path + npy-matlab path
+    # add nnv path, npy-matlab path, and gurobi path
     eng.addpath(os.getcwd())
     eng.addpath(eng.genpath(nnv_path))
     eng.addpath(eng.genpath(npy_matlab_path))
+    eng.addpath(eng.genpath(gurobi_path))
 
     # save reference to it for calling matlab scripts to engine later
     return eng
@@ -71,7 +73,7 @@ def run(config, indices) -> None:
     vp.prepare_filetree(config)
 
     # make sure matlab is started
-    eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH)
+    eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH, GUROBI_PATH)
 
     # start verification
     for sample_num, index in enumerate(indices):
