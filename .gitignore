@@ -7,3 +7,6 @@
 # matlab stuff
 *.asv
 *tbxmanager*
+
+# python stuff
+*__pycache__*
