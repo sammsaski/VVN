@@ -103,7 +103,7 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, verAlg, index
     sample = squeeze(datacopy(index,:,:,:));
     
     % Perform L_inf attack
-    [VS] = L_inf_attack(sample, eps, nR, smpLen);
+    VS = L_inf_attack(sample, eps, smpLen);
     t = tic;
 
     % NEED THIS HERE SO MET EXISTS
@@ -123,7 +123,7 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, verAlg, index
 end
 
 %% Helper Functions
-function [VS] = L_inf_attack(x, epsilon, nR, numFrames)
+function VS = L_inf_attack(x, epsilon, numFrames)
     lb = squeeze(x);
     ub = squeeze(x);
 

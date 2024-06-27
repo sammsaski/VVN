@@ -166,6 +166,14 @@ def generate_indices(config) -> tuple[list[int], list[int]]:
         if len(zoom_in_indices) < class_size * 10 or len(zoom_out_indices) < class_size * 10:
             raise Exception("Not enough correctly classified samples.")
 
+        print(f'Zoom In Indices : {zoom_in_indices} \n')
+        print(f'Zoom Out Indices : {zoom_out_indices} \n')
+
+        # write the indices for the current experiment to its path (in this case it will be in random directory)
+        with open(os.path.join(os.getcwd(), 'results', 'random', 'indices.txt'), 'w') as f:
+            f.write(f'Zoom In Indices : {zoom_in_indices} \n')
+            f.write(f'Zoom Out Indices : {zoom_out_indices} \n')
+
         return zoom_in_indices, zoom_out_indices 
 
     # inorder generation of indices of samples to verify from test set 
