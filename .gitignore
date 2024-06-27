@@ -1,2 +1,5 @@
 *.asv
 .DS_Store
+
+*tbxmanager*
+*__pycache__*
