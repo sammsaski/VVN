@@ -29,37 +29,37 @@ if __name__ == "__main__":
     zoom_in_samples, zoom_out_samples = vp.generate_indices(config)
  
     # get the samples we want
-    #zoom_in_ind= [10, 52, 54, 69, 83, 97]
-    #zoom_out_ind = [12, 27, 59, 66, 43, 52, 70, 91]
+    zoom_in_ind= [10, 52, 54, 69, 83, 97]
+    zoom_out_ind = [12, 27, 59, 66, 43, 52, 70, 91]
 
     # =====================================
     # ============ RELAX ==================
     # =====================================
 
     # run experiment #1 : dataset = zoom in, video length = 4
-    #vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #2 : dataset = zoom out, video length = 4
-    #config.ds_type = 'zoom_out'
-    #vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
+    config.ds_type = 'zoom_out'
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
 
     # run experiment #3 : dataset = zoom in , video length = 8
-    #config.ds_type = 'zoom_in'
-    #config.sample_len = 8
-    #vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
+    config.ds_type = 'zoom_in'
+    config.sample_len = 8
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #4 : dataset = zoom out, video length = 8
-    #config.ds_type = 'zoom_out'
-    #vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
+    config.ds_type = 'zoom_out'
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
 
     # run experiment #5 : dataset = zoom in, video length = 16
-    #config.ds_type = 'zoom_in'
-    #config.sample_len = 16
-    #vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
+    config.ds_type = 'zoom_in'
+    config.sample_len = 16
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #6 : dataset = zoom out, video length = 16
-    #config.ds_type = 'zoom_out'
-    #vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
+    config.ds_type = 'zoom_out'
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
 
 
     # =====================================
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     )
 
     # run experiment #1 : dataset = zoom in, video length = 4
-    # vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #2 : dataset = zoom out, video length = 4
     config.ds_type = 'zoom_out'
