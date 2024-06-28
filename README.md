@@ -8,3 +8,8 @@ Don't forget to install the NNV toolbox and the npy-matlab toolbox before runnin
 
 # requirements.txt
 Numpy could not be upgraded from 1.26.4 to 2.0.0 because of some incompatability with onnxruntime.
+
+# Reproducing/Running VVN Experiments
+1. MATLAB 2024a with NNV installed and both of NNV and npy-matlab added to the path.
+2. conda environment with Python=3.11. Install requirements from requirements.txt. Make sure to install the vvn Python package.
+
