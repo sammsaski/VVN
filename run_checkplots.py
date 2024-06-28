@@ -1,13 +1,16 @@
+# standard lib
 import os
 
+# local package
 import vvn.prep as vp
 import vvn.verify as vvn
 from vvn.config import Config
+import vvn.checkplots
 
 
 if __name__ == "__main__":
-    # get the results dir
-    output_dir = os.path.join(os.getcwd(), 'results')
+    # get the figures dir
+    output_dir = os.path.join(os.getcwd(), 'figs')
 
     # define the starting configuration 
     config = Config(
@@ -22,42 +25,50 @@ if __name__ == "__main__":
         output_dir=output_dir
     )
 
-    # get the samples you wish to verify
+    # get the original samples we verified
     zoom_in_samples, zoom_out_samples = vp.generate_indices(config)
+ 
+    # get the samples we want
+    zoom_in_ind= [10, 52, 54, 69, 83, 97]
+    zoom_out_ind = [12, 27, 59, 66, 43, 52, 70, 91]
 
     # =====================================
     # ============ RELAX ==================
     # =====================================
 
     # run experiment #1 : dataset = zoom in, video length = 4
-    vvn.run(config=config, indices=zoom_in_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #2 : dataset = zoom out, video length = 4
     config.ds_type = 'zoom_out'
-    vvn.run(config=config, indices=zoom_out_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
 
     # run experiment #3 : dataset = zoom in , video length = 8
     config.ds_type = 'zoom_in'
     config.sample_len = 8
-    vvn.run(config=config, indices=zoom_in_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #4 : dataset = zoom out, video length = 8
     config.ds_type = 'zoom_out'
-    vvn.run(config=config, indices=zoom_out_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
 
     # run experiment #5 : dataset = zoom in, video length = 16
     config.ds_type = 'zoom_in'
     config.sample_len = 16
-    vvn.run(config=config, indices=zoom_in_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #6 : dataset = zoom out, video length = 16
     config.ds_type = 'zoom_out'
-    vvn.run(config=config, indices=zoom_out_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
 
 
     # =====================================
     # ============ APPROX =================
     # =====================================
+    
+    # get the samples we want
+    zoom_in_ind= [17, 24, 39, 86]
+    zoom_out_ind = [27, 32, 58, 74]
 
     config = Config(
         sample_gen_type='random',
@@ -72,27 +83,19 @@ if __name__ == "__main__":
     )
 
     # run experiment #1 : dataset = zoom in, video length = 4
-    vvn.run(config=config, indices=zoom_in_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #2 : dataset = zoom out, video length = 4
     config.ds_type = 'zoom_out'
-    vvn.run(config=config, indices=zoom_out_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
 
     # run experiment #3 : dataset = zoom in , video length = 8
     config.ds_type = 'zoom_in'
     config.sample_len = 8
-    vvn.run(config=config, indices=zoom_in_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_in_samples[i] for i in zoom_in_ind])
 
     # run experiment #4 : dataset = zoom out, video length = 8
     config.ds_type = 'zoom_out'
-    vvn.run(config=config, indices=zoom_out_samples)
+    vvn.checkplots.run_checkplots(config=config, indices=[zoom_out_samples[i] for i in zoom_out_ind])
 
-    # run experiment #5 : dataset = zoom in, video length = 16
-    config.ds_type = 'zoom_in'
-    config.sample_len = 16
-    vvn.run(config=config, indices=zoom_in_samples)
-
-    # run experiment #6 : dataset = zoom out, video length = 16
-    config.ds_type = 'zoom_out'
-    vvn.run(config=config, indices=zoom_out_samples)
 

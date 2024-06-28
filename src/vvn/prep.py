@@ -129,7 +129,6 @@ def get_correct_samples(modelpath, datapath) -> tuple[list[int], list[int]]:
 
     return zoom_in, zoom_out
 
-
 def generate_indices(config) -> tuple[list[int], list[int]]:
     # unpack config settings
     sample_gen_type = config.sample_gen_type
