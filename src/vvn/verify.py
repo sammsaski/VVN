@@ -109,6 +109,7 @@ def write_results(output_file, sample_num, res, t, met):
         writer.writerow([sample_num, res, t, met])
 
 def summarize(output_file_dir):
+    print(f'{output_file_dir}')
     for filename in os.listdir(output_file_dir):
         fp = os.path.join(output_file_dir, filename)
 
@@ -150,6 +151,7 @@ def summarize(output_file_dir):
         print('---')
         print(average_time_str)
         print('='*rowlength)
+        print('\n\n')
 
 
 if __name__ == "__main__":
