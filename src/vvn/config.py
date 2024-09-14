@@ -14,7 +14,7 @@ class Config:
     output_dir: str # /path/to/VVN/results 
 
     # Verification settings
-    ds_type: Literal['zoom_in', 'zoom_out'] # might need to change this to ZoomIn/ZoomOut
+    ds_type: Literal['zoom_in', 'zoom_out', 'gtsrb'] # might need to change this to ZoomIn/ZoomOut
     sample_len: Literal[4, 8, 16] # length of videos in number of frames
     attack_type: Literal['single_frame', 'all_frames'] # whether we attack all frames or a subset
     ver_algorithm: Literal['relax', 'approx'] # types of verification algorithms to use
