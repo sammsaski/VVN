@@ -143,16 +143,28 @@ def run_gtsrb(config, indices) -> None:
     for sample_num, index in enumerate(indices):
         print(f'Iteration {sample_num + 1}')
 
+        if_timeout = False
+
         # select epsilon
         for eps_index in range(1, len(epsilon) + 1):
             # TODO: normalize naming convention for results files
             # build the output file
             # for naming convention, we will use the
             # epsilon value for filename -- example filename : eps=1_255
+
             output_file = vgp.build_output_filepath(config=config, filename=f'eps={eps_index}_255')
+
+            # skip if timeout was met at any point in the previous iterations
+            if if_timeout:
+                res, t, met = 3, "timeout", "timeout"
+                write_results(output_file, sample_num, res, t, met)
+                continue
 
             # verify the sample with a specific epsilon value
             res, t, met = verify_gtsrb(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout)
+
+            if res == 3:
+                if_timeout = True
 
             # write the results
             write_results(output_file, sample_num, res, t, met)

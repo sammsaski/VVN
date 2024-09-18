@@ -1,0 +1,21 @@
+Sample Number,Result,Time,Method
+0,3,timeout,timeout
+1,2.0,183.61016558333333,approx
+2,2.0,203.999956625,approx
+3,2.0,1303.4419612916668,approx
+4,3,timeout,timeout
+5,3,timeout,timeout
+6,2.0,141.432841125,approx
+7,2.0,250.27925033333332,approx
+8,2.0,316.95834816666667,approx
+9,2.0,117.45666683333333,approx
+10,2.0,183.69283833333333,approx
+11,2.0,233.99045845833334,approx
+12,3,timeout,timeout
+13,2.0,937.38512725,approx
+14,2.0,1284.588451875,approx
+15,2.0,215.40648291666668,approx
+16,2.0,376.628502125,approx
+17,3,timeout,timeout
+18,2.0,178.86494525,approx
+19,3,timeout,timeout
