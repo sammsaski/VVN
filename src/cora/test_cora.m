@@ -22,7 +22,7 @@ nE = length(epsilon);
 verbose = false;
 modelName = "gtsrb_16f.onnx";
 netonnx = neuralNetwork.readONNXNetwork("../../models/" + modelName, verbose, "BCSSS", "BC");
-display(netonnx);
+% display(netonnx);
 % net = matlab2nnv(netonnx);
 % net.OutputSize = numClasses;
 disp("Finished loading model: " + modelName);
