@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # run experiment #3 : dataset = gtsrb, video length = 16
     config.sample_len = 16
-    vvn.run_gtsrb(config=config, indices=samples[26:])
+    vvn.run_gtsrb(config=config, indices=samples)
 
 
     # =====================================

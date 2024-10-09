@@ -170,7 +170,7 @@ def run_gtsrb(config, indices) -> None:
             write_results(output_file, sample_num, res, t, met)
 
     # print verification summary
-    summarize(vgp.build_output_filepath(config=config, parent_only=True))
+    summarize(vgp.build_output_filepath(config=config, parent_only=True), 215)
 
     # close matlab after experiment finishes
     eng.quit()
@@ -184,9 +184,12 @@ def write_results(output_file, sample_num, res, t, met):
         writer = csv.writer(f)
         writer.writerow([sample_num, res, t, met])
 
-def summarize(output_file_dir):
+def summarize(output_file_dir, data_len):
     print(f'{output_file_dir}')
     for filename in os.listdir(output_file_dir):
+        if filename == '.DS_Store':
+            continue
+
         fp = os.path.join(output_file_dir, filename)
 
         # open the results csv file
@@ -217,7 +220,7 @@ def summarize(output_file_dir):
 
         # display the results
         results_header_str = f'Results of verification with {filename.split(".")[0]}'
-        total_verified_str = f'Verified {int(total_verified)} robust samples out of {100}.'
+        total_verified_str = f'Verified {int(total_verified)} robust samples out of {data_len}.'
         average_time_str = f'Average running time was : {average_time}.'
         rowlength = max(len(total_verified_str), len(average_time_str), len(results_header_str))
         print('='*rowlength)
