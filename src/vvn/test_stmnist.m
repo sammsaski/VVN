@@ -43,7 +43,7 @@ l = labels(index) + 1;
 %%%%%%%%%%%%%%%%
 
 % eps = epsilon(1);
-eps = 10/255;
+eps = 1/255;
 fprintf('Starting verification with epsilon %d \n', eps);
 
 % Perform L_inf attack
@@ -120,13 +120,15 @@ scatter(x, UB_output, 'x', 'MarkerEdgeColor', 'b');
 
 %% Helper Functions
 function [VS, lb_clip, ub_clip] = L_inf_attack(x, epsilon, numFrames)
+    x = permute(x, [2, 3, 1, 4]);
+
     lb = squeeze(x);
     ub = squeeze(x);
 
     % Perturb the frames
     for fn=1:numFrames
-        lb(fn, :, :, :) = x(fn, :, :, :) - epsilon;
-        ub(fn, :, :, :) = x(fn, :, :, :) + epsilon;
+        lb(:, :, fn, :) = x(:, :, fn, :) - epsilon;
+        ub(:, :, fn, :) = x(:, :, fn, :) + epsilon;
     end
 
     % Reshape for conversion to VolumeStar
@@ -134,8 +136,8 @@ function [VS, lb_clip, ub_clip] = L_inf_attack(x, epsilon, numFrames)
     % ub = permute(ub, [2 3 1 4]);
 
     % Clip the perturbed values to be between 0-1
-    lb_min = zeros(numFrames, 10, 10, 2);
-    ub_max = ones(numFrames, 10, 10, 2);
+    lb_min = zeros(10, 10, numFrames, 2);
+    ub_max = ones(10, 10, numFrames, 2);
     lb_clip = max(lb, lb_min);
     ub_clip = min(ub, ub_max);
 
