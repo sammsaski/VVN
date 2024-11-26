@@ -46,10 +46,10 @@ function [res, label] = checkplots(dsVar, smpLen, attackType, verAlg, index, eps
     fprintf("Running robustness verification on %s dataset...", dsVarCaps);
 
     % Load data
-    % data = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
-    data = readNPY(sprintf("data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
-    % labels = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
-    labels = readNPY(sprintf("data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
+    data = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
+    % data = readNPY(sprintf("data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
+    labels = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
+    % labels = readNPY(sprintf("data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
 
     % Preprocessing
     reshaped_data = permute(data, [1, 3, 2, 4, 5]); % to match BCSSS
@@ -67,8 +67,8 @@ function [res, label] = checkplots(dsVar, smpLen, attackType, verAlg, index, eps
 
     % Load the model
     modelName = sprintf("%s_%df.onnx", dsVarShort, smpLen);
-    % netonnx = importONNXNetwork("../../models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
-    netonnx = importONNXNetwork("models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
+    netonnx = importONNXNetwork("../../models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
+    % netonnx = importONNXNetwork("models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
     net = matlab2nnv(netonnx);
     net.OutputSize = numClasses;
     disp("Finished loading model: " + modelName);
@@ -125,17 +125,18 @@ function [res, label] = checkplots(dsVar, smpLen, attackType, verAlg, index, eps
     x = [0 1 2 3 4 5 6 7 8 9];
 
     % Visualize set ranges and evaluation points
-    fig = figure('Visible', 'off');
+    % fig = figure('Visible', 'off');
+    figure;
     errorbar(x, mid_range, range_size, '.');
     hold on;
     xlim([-0.5, 9.5]);
     scatter(x, Y_outputs, 'x', 'MarkerEdgeColor', 'r');
 
     % Save the figure
-    saveas(fig, sprintf("figs/range_plots/%s/%s/%s/%d/fig_%d_label=%d_eps=%d.png", dsVar, attackType, verAlg, smpLen, index, label, epsIndex)); 
+    % saveas(fig, sprintf("figs/range_plots/%s/%s/%s/%d/fig_%d_label=%d_eps=%d.png", dsVar, attackType, verAlg, smpLen, index, label, epsIndex)); 
 
     % Close the figure
-    close(fig);
+    % close(fig);
 end
 
 %% Helper Functions

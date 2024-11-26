@@ -3,6 +3,8 @@
 # don't commit the data
 *data/ZoomIn*
 *data/ZoomOut*
+*data/GTSRB*
+*data/STMNIST*
 
 # matlab stuff
 *.asv

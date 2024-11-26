@@ -11,6 +11,8 @@ import numpy as np
 # local modules
 import vvn.prep as vp
 from vvn.config import Config
+import vvn.gtsrbprep as vgp
+import vvn.stmnistprep as vsp
 
 # define global variables
 PARENT_PATH = os.path.dirname(os.getcwd())
@@ -19,7 +21,7 @@ NPY_MATLAB_PATH = os.path.join(PARENT_PATH, 'npy-matlab', 'npy-matlab')
 GUROBI_PATH = '/Library/gurobi1102/macos_universal2/examples/matlab' # for macos
 
 # TODO: Write docstrings
-def prepare_engine(nnv_path, npy_matlab_path, gurobi_path):
+def prepare_engine(nnv_path, npy_matlab_path):
     if not nnv_path or not npy_matlab_path:
         raise Exception('One of nnv_path or npy_matlab_path is not defined. Please ensure these have been set before running.')
 
@@ -31,7 +33,7 @@ def prepare_engine(nnv_path, npy_matlab_path, gurobi_path):
     eng.addpath(os.getcwd())
     eng.addpath(eng.genpath(nnv_path))
     eng.addpath(eng.genpath(npy_matlab_path))
-    eng.addpath(eng.genpath(gurobi_path))
+    # eng.addpath(eng.genpath(gurobi_path))
 
     # save reference to it for calling matlab scripts to engine later
     return eng
@@ -99,6 +101,156 @@ def run(config, indices) -> None:
     # close matlab after experiment finishes
     eng.quit()
 
+def verify_gtsrb(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
+    # check that MATLAB engine was started correctly and is accessible
+    if not eng:
+        raise Exception('MATLAB Engine was not correctly started and shared. Please make sure to run `prepare_engine`.')
+
+    # call to MATLAB script to run verification
+    future = eng.verifygtsrb(sample_len, attack_type, ver_algorithm, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
+
+    try:
+        [res, t, met] = future.result(timeout=float(timeout))
+
+    except matlab.engine.TimeoutError:
+        print('timeout')
+        res = 3
+        t = 'timeout'
+        met = 'timeout'
+
+    future.cancel()
+
+    return res, t, met
+
+def run_gtsrb(config, indices) -> None:
+    # Unpack configuration settings;
+    epsilon = config.epsilon
+    timeout = config.timeout
+    
+    ds_type = config.ds_type
+    sample_len = config.sample_len
+    attack_type = config.attack_type
+    ver_algorithm = config.ver_algorithm
+
+    print(f'Running verification with config: verification algorithm={ver_algorithm}, dataset type={ds_type}, video length={sample_len}') 
+
+    # make sure directory structure + results files are created and correct
+    vgp.prepare_filetree(config)
+
+    # make sure matlab is started
+    eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH)
+
+    # start verification
+    for sample_num, index in enumerate(indices):
+        print(f'Iteration {sample_num + 1}')
+
+        if_timeout = False
+
+        # select epsilon
+        for eps_index in range(1, len(epsilon) + 1):
+            # TODO: normalize naming convention for results files
+            # build the output file
+            # for naming convention, we will use the
+            # epsilon value for filename -- example filename : eps=1_255
+
+            output_file = vgp.build_output_filepath(config=config, filename=f'eps={eps_index}_255')
+
+            # skip if timeout was met at any point in the previous iterations
+            if if_timeout:
+                res, t, met = 3, "timeout", "timeout"
+                write_results(output_file, sample_num, res, t, met)
+                continue
+
+            # verify the sample with a specific epsilon value
+            res, t, met = verify_gtsrb(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout)
+
+            if res == 3:
+                if_timeout = True
+
+            # write the results
+            write_results(output_file, sample_num, res, t, met)
+
+    # print verification summary
+    summarize(vgp.build_output_filepath(config=config, parent_only=True), 215)
+
+    # close matlab after experiment finishes
+    eng.quit()
+
+def verify_stmnist(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
+    # check that MATLAB engine was started correctly and is accessible
+    if not eng:
+        raise Exception('MATLAB Engine was not correctly started and shared. Please make sure to run `prepare_engine`.')
+
+    # call to MATLAB script to run verification
+    future = eng.verifystmnist(sample_len, attack_type, ver_algorithm, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
+
+    try:
+        [res, t, met] = future.result(timeout=float(timeout))
+
+    except matlab.engine.TimeoutError:
+        print('timeout')
+        res = 3
+        t = 'timeout'
+        met = 'timeout'
+
+    future.cancel()
+
+    return res, t, met
+
+def run_stmnist(config, indices) -> None:
+    # Unpack configuration settings;
+    epsilon = config.epsilon
+    timeout = config.timeout
+    
+    ds_type = config.ds_type
+    sample_len = config.sample_len
+    attack_type = config.attack_type
+    ver_algorithm = config.ver_algorithm
+
+    print(f'Running verification with config: verification algorithm={ver_algorithm}, dataset type={ds_type}, video length={sample_len}') 
+
+    # make sure directory structure + results files are created and correct
+    vsp.prepare_filetree(config)
+
+    # make sure matlab is started
+    eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH)
+
+    # start verification
+    for sample_num, index in enumerate(indices):
+        print(f'Iteration {sample_num + 1}')
+
+        if_timeout = False
+
+        # select epsilon
+        for eps_index in range(1, len(epsilon) + 1):
+            # TODO: normalize naming convention for results files
+            # build the output file
+            # for naming convention, we will use the
+            # epsilon value for filename -- example filename : eps=1_255
+
+            output_file = vsp.build_output_filepath(config=config, filename=f'eps={eps_index}_255')
+
+            # skip if timeout was met at any point in the previous iterations
+            if if_timeout:
+                res, t, met = 3, "timeout", "timeout"
+                write_results(output_file, sample_num, res, t, met)
+                continue
+
+            # verify the sample with a specific epsilon value
+            res, t, met = verify_stmnist(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout)
+
+            if res == 3:
+                if_timeout = True
+
+            # write the results
+            write_results(output_file, sample_num, res, t, met)
+
+    # print verification summary
+    summarize(vsp.build_output_filepath(config=config, parent_only=True), 100)
+
+    # close matlab after experiment finishes
+    eng.quit()
+
 # TODO: implement
 def run_all() -> None:
     pass
@@ -108,8 +260,12 @@ def write_results(output_file, sample_num, res, t, met):
         writer = csv.writer(f)
         writer.writerow([sample_num, res, t, met])
 
-def summarize(output_file_dir):
+def summarize(output_file_dir, data_len):
+    print(f'{output_file_dir}')
     for filename in os.listdir(output_file_dir):
+        if filename == '.DS_Store':
+            continue
+
         fp = os.path.join(output_file_dir, filename)
 
         # open the results csv file
@@ -140,7 +296,7 @@ def summarize(output_file_dir):
 
         # display the results
         results_header_str = f'Results of verification with {filename.split(".")[0]}'
-        total_verified_str = f'Verified {int(total_verified)} robust samples out of {100}.'
+        total_verified_str = f'Verified {int(total_verified)} robust samples out of {data_len}.'
         average_time_str = f'Average running time was : {average_time}.'
         rowlength = max(len(total_verified_str), len(average_time_str), len(results_header_str))
         print('='*rowlength)
@@ -150,6 +306,7 @@ def summarize(output_file_dir):
         print('---')
         print(average_time_str)
         print('='*rowlength)
+        print('\n\n')
 
 
 if __name__ == "__main__":
