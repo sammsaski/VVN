@@ -27,6 +27,36 @@ netonnx = neuralNetwork.readONNXNetwork("../../models/" + modelName, verbose, "B
 % net.OutputSize = numClasses;
 disp("Finished loading model: " + modelName);
 
+%%
+display(netonnx);
+
+%%
+% B D H W C
+s = datacopy(1,:,:,:,:);
+s = squeeze(s);
+% s = permute(s, [2 3 1 4]);
+l = labels(1)+1;
+
+%%
+disp("start here")
+P = netonnx.evaluate(s);
+[~, Pred] = max(P);
+%%
+count = 0;
+for i=1:25
+    disp(i)
+    s = datacopy(i,:,:,:,:);
+    s = squeeze(s);
+    s = permute(s, [2 3 1 4]);
+    l = labels(i)+1;
+    P = netonnx.evaluate(s);
+    [~, Pred] = max(P);
+    if Pred == l
+        count = count + 1;
+    else
+        fprintf('missed on iteration %d', i);
+    end
+end
 %% Verification settings
 reachOptions = struct;
 reachOptions.reachMethod = "relax-star-area";

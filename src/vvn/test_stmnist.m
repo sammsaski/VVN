@@ -1,7 +1,7 @@
 %% Load things
 % Load data
-data = readNPY("../../data/STMNIST/test/stmnistvideo_16f_test_data_seq.npy");
-labels = readNPY("../../data/STMNIST/test/stmnistvideo_16f_test_labels_seq.npy");
+data = readNPY("../../data/STMNIST/test/stmnistvideo_64f_test_data_seq.npy");
+labels = readNPY("../../data/STMNIST/test/stmnistvideo_64f_test_labels_seq.npy");
 
 % Preprocessing
 % from [B D C H W] to [B D H W C]
@@ -18,7 +18,7 @@ epsilon = [1/255; 2/255; 3/255];
 nE = length(epsilon);
 
 % Load the model
-modelName = "stmnist_16f.onnx";
+modelName = "stmnist_64f.onnx";
 netonnx = importONNXNetwork("../../models/" + modelName, "InputDataFormats", "BCSSS", "OutputDataFormats", "BC");
 net = matlab2nnv(netonnx);
 net.OutputSize = numClasses;
@@ -31,11 +31,13 @@ reachOptions.relaxFactor = 0.5;
 
 %% Make predictions on test set to check that we are verifying correct
 outputLabels = zeros(length(datacopy));
-index = 2;
+index = 719; % 311 for a really long example
 
 s = datacopy(index,:,:,:,:);
 s = squeeze(s);
 l = labels(index) + 1;
+
+fprintf('Label: %d \n', l);
 
 %%
 %%%%%%%%%%%%%%%%
@@ -43,11 +45,13 @@ l = labels(index) + 1;
 %%%%%%%%%%%%%%%%
 
 % eps = epsilon(1);
-eps = 1/255;
+% eps = 1/255;
+eps = 3/255;
+
 fprintf('Starting verification with epsilon %d \n', eps);
 
 % Perform L_inf attack
-[VS, lb_clip, ub_clip] = L_inf_attack(s, eps, 16);
+[VS, lb_clip, ub_clip] = L_inf_attack(s, eps, 64);
 
 output = net.evaluate(s);
 [~, P] = max(output);
@@ -60,6 +64,9 @@ UB_output = net.evaluate(ub_clip);
 
 %%
 t = tic;
+
+% profiler
+profile on -history;
 
 % NEED THIS HERE SO MET EXISTS
 try
@@ -74,6 +81,8 @@ catch ME
     fprintf(met);
 end
 
+p = profile('info');
+
 res = temp;
 time = toc(t);
 
@@ -81,6 +90,7 @@ fprintf("\n");
 fprintf("Result : %d \n", res);
 fprintf("Time: %f\n", time);
 
+%%
 fprintf("Computing reach sets...\n")
 % Get the reachable sets 
 R = net.reachSet{end};
@@ -106,29 +116,33 @@ x = [0 1 2 3 4 5 6 7 8 9];
 % Visualize set ranges and evaluation points
 % fig = figure('Visible', 'off');
 figure;
-errorbar(x, mid_range, range_size, '.');
+errorbar(x, mid_range, range_size, '.', 'Color', 'r', 'LineWidth', 2);
 hold on;
 xlim([-0.5, 9.5]);
-scatter(x, output, 'x', 'MarkerEdgeColor', 'r');
-scatter(x, LB_output, 'x', 'MarkerEdgeColor', 'g');
-scatter(x, UB_output, 'x', 'MarkerEdgeColor', 'b');
-
+scatter(x, output, 30, 'x', 'MarkerEdgeColor', 'r');
+% scatter(x, LB_output, 'x', 'MarkerEdgeColor', 'g');
+% scatter(x, UB_output, 'x', 'MarkerEdgeColor', 'b');
+title('Reachable Outputs');
+xlabel('Label');
+ylabel('Reachable Output Range on the Input Set');
 % Save the figure
-% saveas(figure, "bad_test_stmnist_plot.png");
+saveas(figure, "new_bad_test_stmnist_plot.png");
 
 
 
 %% Helper Functions
 function [VS, lb_clip, ub_clip] = L_inf_attack(x, epsilon, numFrames)
-    x = permute(x, [2, 3, 1, 4]);
+    % x = permute(x, [2, 3, 1, 4]);
 
     lb = squeeze(x);
     ub = squeeze(x);
 
     % Perturb the frames
     for fn=1:numFrames
-        lb(:, :, fn, :) = x(:, :, fn, :) - epsilon;
-        ub(:, :, fn, :) = x(:, :, fn, :) + epsilon;
+        lb(fn, :, :, :) = x(fn, :, :, :) - epsilon;
+        ub(fn, :, :, :) = x(fn, :, :, :) + epsilon;
+        % lb(:, :, fn, :) = x(:, :, fn, :) - epsilon;
+        % ub(:, :, fn, :) = x(:, :, fn, :) + epsilon;
     end
 
     % Reshape for conversion to VolumeStar
@@ -136,8 +150,10 @@ function [VS, lb_clip, ub_clip] = L_inf_attack(x, epsilon, numFrames)
     % ub = permute(ub, [2 3 1 4]);
 
     % Clip the perturbed values to be between 0-1
-    lb_min = zeros(10, 10, numFrames, 2);
-    ub_max = ones(10, 10, numFrames, 2);
+    lb_min = zeros(numFrames, 10, 10, 2);
+    ub_max = ones(numFrames, 10, 10, 2);
+    % lb_min = zeros(10, 10, numFrames, 2);
+    % ub_max = ones(10, 10, numFrames, 2);
     lb_clip = max(lb, lb_min);
     ub_clip = min(ub, ub_max);
 
