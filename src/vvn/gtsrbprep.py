@@ -24,7 +24,7 @@ random.seed(42)
 def prepare_filetree(config: Config):
     # TODO: come up with a more flexible way to do this
     # create all directories for each type of experiment being run
-    for sgt in ['random', 'inorder']: 
+    for sgt in ['random', 'inorder']: # TODO: Delete this, we don't use anything other than random. 
         for at in ['single_frame', 'all_frames']:
             dst = 'gtsrb' 
             for va in ['relax', 'approx']:

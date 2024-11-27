@@ -75,8 +75,6 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
 
     return fp if parent_only else os.path.join(fp, filename) + '.csv'
 
-# TODO: check that the output from the models is the exact same
-#       whether in python or matlab
 def get_correct_samples(modelpath, datapath) -> tuple[list[int], list[int]]:
     zoom_in_outputs = []
     zoom_out_outputs = []

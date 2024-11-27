@@ -99,8 +99,6 @@ def get_correct_samples(modelpath, datapath) -> tuple[list[int], list[int]]:
 
         for i in range(data.shape[0]):
             sample = data[i:i+1]
-            # no need to transpose for stmnist
-            # sample = sample.transpose(0, 2, 1, 3, 4)
             sample = sample.astype(np.float32) # expects tensor(float) not tensor(double)
             output = session.run(None, {input_name: sample})
             model_outputs.append(output[0])
