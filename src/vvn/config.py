@@ -15,7 +15,6 @@ class Config:
     # Verification settings
     ds_type: Literal['zoom_in', 'zoom_out', 'gtsrb', 'stmnist'] 
     sample_len: Literal[4, 8, 16, 32, 64] # length of videos in number of frames
-    attack_type: Literal['single_frame', 'all_frames'] # whether we attack all frames or a subset TODO: Like above comment, we can delete this
     ver_algorithm: Literal['relax', 'approx'] # types of verification algorithms to use
 
     def update(self, **kwargs):

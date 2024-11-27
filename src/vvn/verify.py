@@ -36,13 +36,13 @@ def prepare_engine(nnv_path, npy_matlab_path):
     # save reference to it for calling matlab scripts to engine later
     return eng
 
-def verify(ds_type, sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
+def verify(ds_type, sample_len, ver_algorithm, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
     # check that MATLAB engine was started correctly and is accessible
     if not eng:
         raise Exception('MATLAB Engine was not correctly started and shared. Please make sure to run `prepare_engine`.')
 
     # call to MATLAB script to run verification
-    future = eng.verifyvideo(ds_type, sample_len, attack_type, ver_algorithm, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
+    future = eng.verifyvideo(ds_type, sample_len, ver_algorithm, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
 
     try:
         [res, t, met] = future.result(timeout=float(timeout))
@@ -64,7 +64,6 @@ def run(config, indices) -> None:
     
     ds_type = config.ds_type
     sample_len = config.sample_len
-    attack_type = config.attack_type
     ver_algorithm = config.ver_algorithm
 
     print(f'Running verification with config: verification algorithm={ver_algorithm}, dataset type={ds_type}, video length={sample_len}') 
@@ -88,7 +87,7 @@ def run(config, indices) -> None:
             output_file = vp.build_output_filepath(config=config, filename=f'eps={eps_index}_255')
 
             # verify the sample with a specific epsilon value
-            res, t, met = verify(ds_type, sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout)
+            res, t, met = verify(ds_type, sample_len, ver_algorithm, eng, index, eps_index, timeout)
 
             # write the results
             write_results(output_file, sample_num, res, t, met)
@@ -99,13 +98,13 @@ def run(config, indices) -> None:
     # close matlab after experiment finishes
     eng.quit()
 
-def verify_gtsrb(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
+def verify_gtsrb(sample_len, ver_algorithm, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
     # check that MATLAB engine was started correctly and is accessible
     if not eng:
         raise Exception('MATLAB Engine was not correctly started and shared. Please make sure to run `prepare_engine`.')
 
     # call to MATLAB script to run verification
-    future = eng.verifygtsrb(sample_len, attack_type, ver_algorithm, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
+    future = eng.verifygtsrb(sample_len, ver_algorithm, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
 
     try:
         [res, t, met] = future.result(timeout=float(timeout))
@@ -127,7 +126,6 @@ def run_gtsrb(config, indices) -> None:
     
     ds_type = config.ds_type
     sample_len = config.sample_len
-    attack_type = config.attack_type
     ver_algorithm = config.ver_algorithm
 
     print(f'Running verification with config: verification algorithm={ver_algorithm}, dataset type={ds_type}, video length={sample_len}') 
@@ -160,7 +158,7 @@ def run_gtsrb(config, indices) -> None:
                 continue
 
             # verify the sample with a specific epsilon value
-            res, t, met = verify_gtsrb(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout)
+            res, t, met = verify_gtsrb(sample_len, ver_algorithm, eng, index, eps_index, timeout)
 
             if res == 3:
                 if_timeout = True
@@ -174,13 +172,13 @@ def run_gtsrb(config, indices) -> None:
     # close matlab after experiment finishes
     eng.quit()
 
-def verify_stmnist(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
+def verify_stmnist(sample_len, ver_algorithm, eng, index, eps_index, timeout) -> Tuple[int, float | str, str]:
     # check that MATLAB engine was started correctly and is accessible
     if not eng:
         raise Exception('MATLAB Engine was not correctly started and shared. Please make sure to run `prepare_engine`.')
 
     # call to MATLAB script to run verification
-    future = eng.verifystmnist(sample_len, attack_type, ver_algorithm, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
+    future = eng.verifystmnist(sample_len, ver_algorithm, index, eps_index, nargout=3, background=True, stdout=io.StringIO())
 
     try:
         [res, t, met] = future.result(timeout=float(timeout))
@@ -202,7 +200,6 @@ def run_stmnist(config, indices) -> None:
     
     ds_type = config.ds_type
     sample_len = config.sample_len
-    attack_type = config.attack_type
     ver_algorithm = config.ver_algorithm
 
     print(f'Running verification with config: verification algorithm={ver_algorithm}, dataset type={ds_type}, video length={sample_len}') 
@@ -235,7 +232,7 @@ def run_stmnist(config, indices) -> None:
                 continue
 
             # verify the sample with a specific epsilon value
-            res, t, met = verify_stmnist(sample_len, attack_type, ver_algorithm, eng, index, eps_index, timeout)
+            res, t, met = verify_stmnist(sample_len, ver_algorithm, eng, index, eps_index, timeout)
 
             if res == 3:
                 if_timeout = True
@@ -315,7 +312,6 @@ if __name__ == "__main__":
         epsilon=[1/255, 2/255, 3/255],
         ds_type='zoom_in',
         sample_len=16,
-        attack_type='all_frames',
         ver_algorithm='relax',
         timeout=3600,
         output_dir=''

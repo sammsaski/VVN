@@ -1,19 +1,13 @@
-function [res, time, met] = verifystmnist(smpLen, attackType, verAlg, index, epsIndex)
+function [res, time, met] = verifystmnist(smpLen, verAlg, index, epsIndex)
     %
     % smpLen (int)        : the length of a sample (video) in the dataset. either 4, 8, or 16.
-    % attackType (string) : the type of video verification. either "single_frame" or "all_frames".
     % verAlg (string)     : the verification algorithm to use. either "relax" or "approx".
     % index (int)         : the index into the dataset to get the targeted sample to verify.
     % epsIndex (int)      : to help us select the epsilon value we would like to use for the attack.
     %
 
-    if smpLen ~= 4 && smpLen ~= 8 && smpLen ~= 16 && smpLen ~= 32 && smpLen ~= 64
-        printf("smpLen argument was invalid. Must be 4, 8, 16, 32, or 64.")
-        return
-    end
-
-    if attackType ~= "single_frame" && attackType ~= "all_frames"
-        printf("attackType argument was invalid. Must be 'single_frame' or 'all_frames'.")
+    if smpLen ~= 16 && smpLen ~= 32 && smpLen ~= 64
+        printf("smpLen argument was invalid. Must be 16, 32, or 64.")
         return
     end
 
@@ -34,8 +28,6 @@ function [res, time, met] = verifystmnist(smpLen, attackType, verAlg, index, eps
 
     % Experimental variables
     numClasses = 10;
-    n = 10; % Number of images to evaluate per class
-    N = n * numClasses; % Total number of samples to evaluate
 
     % Size of attack
     epsilon = [1/255; 2/255; 3/255];

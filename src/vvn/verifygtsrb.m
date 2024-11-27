@@ -1,7 +1,6 @@
-function [res, time, met] = verifygtsrb(smpLen, attackType, verAlg, index, epsIndex)
+function [res, time, met] = verifygtsrb(smpLen, verAlg, index, epsIndex)
     %
     % smpLen (int)        : the length of a sample (video) in the dataset. either 4, 8, or 16.
-    % attackType (string) : the type of video verification. either "single_frame" or "all_frames".
     % verAlg (string)     : the verification algorithm to use. either "relax" or "approx".
     % index (int)         : the index into the dataset to get the targeted sample to verify.
     % epsIndex (int)      : to help us select the epsilon value we would like to use for the attack.
@@ -9,11 +8,6 @@ function [res, time, met] = verifygtsrb(smpLen, attackType, verAlg, index, epsIn
 
     if smpLen ~= 4 && smpLen ~= 8 && smpLen ~= 16
         printf("smpLen argument was invalid. Must be 4, 8, or 16.")
-        return
-    end
-
-    if attackType ~= "single_frame" && attackType ~= "all_frames"
-        printf("attackType argument was invalid. Must be 'single_frame' or 'all_frames'.")
         return
     end
 
@@ -34,8 +28,6 @@ function [res, time, met] = verifygtsrb(smpLen, attackType, verAlg, index, epsIn
 
     % Experimental variables
     numClasses = 43;
-    n = 5; % Number of images to evaluate per class
-    N = n * numClasses; % Total number of samples to evaluate
 
     % Size of attack
     epsilon = [1/255; 2/255; 3/255];

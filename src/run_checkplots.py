@@ -20,7 +20,6 @@ if __name__ == "__main__":
         epsilon=[1/255, 2/255, 3/255],
         ds_type='zoom_in',
         sample_len=4,
-        attack_type='all_frames',
         ver_algorithm='relax',
         timeout=1800,
         output_dir=output_dir
@@ -77,7 +76,6 @@ if __name__ == "__main__":
         epsilon=[1/255, 2/255, 3/255],
         ds_type='zoom_in',
         sample_len=4,
-        attack_type='all_frames',
         ver_algorithm='approx',
         timeout=1800,
         output_dir=output_dir
