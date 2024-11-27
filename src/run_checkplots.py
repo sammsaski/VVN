@@ -15,7 +15,6 @@ if __name__ == "__main__":
 
     # define the starting configuration 
     config = Config(
-        sample_gen_type='random',
         class_size=10,
         epsilon=[1/255, 2/255, 3/255],
         ds_type='zoom_in',
@@ -71,7 +70,6 @@ if __name__ == "__main__":
     zoom_out_ind = [27, 32, 58, 74]
 
     config = Config(
-        sample_gen_type='random',
         class_size=10,
         epsilon=[1/255, 2/255, 3/255],
         ds_type='zoom_in',

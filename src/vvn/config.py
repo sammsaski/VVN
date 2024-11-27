@@ -6,7 +6,6 @@ from typing import List, Literal, Self
 @dataclass
 class Config:
     # Experimental settings
-    sample_gen_type: Literal['random', 'inorder'] # TODO: This feature can be removed.
     class_size: int # number of samples to verify per class
     epsilon: List # [1/255, 2/255, 3/255] 
     timeout: int # 1800 (s)
