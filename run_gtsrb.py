@@ -31,11 +31,11 @@ if __name__ == "__main__":
     # =====================================
 
     # run experiment #1 : dataset = gtsrb, video length = 4
-    # vvn.run_gtsrb(config=config, indices=samples)
+    vvn.run_gtsrb(config=config, indices=samples)
 
     # run experiment #2 : dataset = gtsrb, video length = 8
-    # config.sample_len = 8
-    # vvn.run_gtsrb(config=config, indices=samples)
+    config.sample_len = 8
+    vvn.run_gtsrb(config=config, indices=samples)
 
     # run experiment #3 : dataset = gtsrb, video length = 16
     config.sample_len = 16

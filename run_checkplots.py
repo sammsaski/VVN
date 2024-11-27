@@ -21,7 +21,7 @@ if __name__ == "__main__":
         sample_len=4,
         attack_type='all_frames',
         ver_algorithm='relax',
-        timeout=3600,
+        timeout=1800,
         output_dir=output_dir
     )
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         sample_len=4,
         attack_type='all_frames',
         ver_algorithm='approx',
-        timeout=3600,
+        timeout=1800,
         output_dir=output_dir
     )
 

@@ -4,6 +4,16 @@ import vvn.prep as vp
 import vvn.verify as vvn
 from vvn.config import Config
 
+"""A python script for summarizing and printing out the results of the
+verification experiment.
+
+Most of this code can just be ignored/deleted as it does not actually contribute to the
+computational results. 
+
+TODO: Convert this to a script (maybe takes arguments?) and move to `testing` dir. Or just delete this script
+and include an example of calling summarize somewhere else in the docs to show that it can be done.
+"""
+
 
 if __name__ == "__main__":
     # get the results dir

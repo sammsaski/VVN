@@ -15,7 +15,7 @@ if __name__ == "__main__":
         class_size=10,
         epsilon=[1/255, 2/255, 3/255],
         ds_type='stmnist',
-        sample_len=4,
+        sample_len=16,
         attack_type='all_frames',
         ver_algorithm='relax',
         timeout=1800,
@@ -29,22 +29,14 @@ if __name__ == "__main__":
     # ============ RELAX ==================
     # =====================================
 
-    # run experiment #1 : dataset = stmnist, video length = 4
+    # run experiment #1 : dataset = stmnist, video length = 16
     vvn.run_stmnist(config=config, indices=samples)
 
-    # run experiment #2 : dataset = stmnist, video length = 8
-    config.sample_len = 8
-    vvn.run_stmnist(config=config, indices=samples)
-
-    # run experiment #3 : dataset = stmnist, video length = 16
-    config.sample_len = 16
-    vvn.run_stmnist(config=config, indices=samples)
-
-    # run experiment #4 : dataset = stmnist, video length = 32
+    # run experiment #2 : dataset = stmnist, video length = 32
     config.sample_len = 32
     vvn.run_stmnist(config=config, indices=samples)
 
-    # run experiment #5 : dataset = stmnist, video length = 64
+    # run experiment #3 : dataset = stmnist, video length = 64
     config.sample_len = 64
     vvn.run_stmnist(config=config, indices=samples)
 
@@ -57,28 +49,20 @@ if __name__ == "__main__":
         class_size=10,
         epsilon=[1/255, 2/255, 3/255],
         ds_type='stmnist',
-        sample_len=4,
+        sample_len=16,
         attack_type='all_frames',
         ver_algorithm='approx',
         timeout=1800,
         output_dir=output_dir
     )
 
-    # run experiment #1 : dataset = stmnist, video length = 4
+    # run experiment #1 : dataset = stmnist, video length = 16
     vvn.run_stmnist(config=config, indices=samples)
 
-    # run experiment #2 : dataset = stmnist, video length = 8
-    config.sample_len = 8
-    vvn.run_stmnist(config=config, indices=samples)
-
-    # run experiment #3 : dataset = stmnist, video length = 16
-    config.sample_len = 16
-    vvn.run_stmnist(config=config, indices=samples)
-
-    # run experiment #4 : dataset = stmnist, video length = 32
+    # run experiment #2 : dataset = stmnist, video length = 32
     config.sample_len = 32
     vvn.run_stmnist(config=config, indices=samples)
 
-    # run experiment #5 : dataset = stmnist, video length = 64
+    # run experiment #3 : dataset = stmnist, video length = 64
     config.sample_len = 64
     vvn.run_stmnist(config=config, indices=samples)
