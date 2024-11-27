@@ -43,7 +43,6 @@ function [res, time, met] = verifystmnist(smpLen, attackType, verAlg, index, eps
 
     % Load the model
     modelName = sprintf("stmnist_%df.onnx", smpLen);
-    % netonnx = importONNXNetwork("../../models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
     netonnx = importONNXNetwork("models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
     net = matlab2nnv(netonnx);
     net.OutputSize = numClasses;
@@ -97,37 +96,6 @@ function [res, time, met] = verifystmnist(smpLen, attackType, verAlg, index, eps
     res = temp;
     time = toc(t);
 
-    % % Get the reachable sets 
-    % R = net.reachSet{end};
-    % 
-    % % Get ranges for each output index
-    % [lb_out, ub_out] = R.getRanges;
-    % lb_out = squeeze(lb_out);
-    % ub_out = squeeze(ub_out);
-    % 
-    % % Get middle point for each output and range sizes
-    % mid_range = (lb_out + ub_out)/2;
-    % range_size = ub_out - mid_range;
-    % 
-    % % Label for x-axis
-    % x = [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42];
-    % 
-    % % Visualize set ranges and evaluation points
-    % disp(labels(index)+1);
-    % disp(P);
-    % disp(res);
-    % %fig = figure('Visible', 'off');
-    % figure;
-    % errorbar(x, mid_range, range_size, '.');
-    % hold on;
-    % xlim([-0.5, 42.5]);
-    % scatter(x, output, 'x', 'MarkerEdgeColor', 'r');
-
-    % Save the figure
-    % saveas(fig, sprintf("figs/range_plots/%s/%s/%s/%d/fig_%d_label=%d_eps=%d.png", dsVar, attackType, verAlg, smpLen, index, label, epsIndex)); 
-
-    % Close the figure
-    % close(fig);
 end
 
 %% Helper Functions
@@ -140,10 +108,6 @@ function VS = L_inf_attack(x, epsilon, numFrames)
         lb(fn, :, :, :) = x(fn, :, :, :) - epsilon;
         ub(fn, :, :, :) = x(fn, :, :, :) + epsilon;
     end
-
-    % Reshape for conversion to VolumeStar
-    % lb = permute(lb, [2 3 1 4]);
-    % ub = permute(ub, [2 3 1 4]);
 
     % Clip the perturbed values to be between 0-1
     lb_min = zeros(numFrames, 10, 10, 2);

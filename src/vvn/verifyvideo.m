@@ -45,9 +45,7 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, verAlg, index
     fprintf("Running robustness verification on %s dataset...", dsVarCaps);
 
     % Load data
-    % data = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
     data = readNPY(sprintf("data/%s/test/mnistvideo_%s_%df_test_data_seq.npy", dsVarCaps, dsVar, smpLen));
-    % labels = readNPY(sprintf("../../data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
     labels = readNPY(sprintf("data/%s/test/mnistvideo_%s_test_labels_seq.npy", dsVarCaps, dsVar));
 
     % Preprocessing
@@ -66,7 +64,6 @@ function [res, time, met] = verifyvideo(dsVar, smpLen, attackType, verAlg, index
 
     % Load the model
     modelName = sprintf("%s_%df.onnx", dsVarShort, smpLen);
-    % netonnx = importONNXNetwork("../../models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
     netonnx = importONNXNetwork("models/" + modelName, "InputDataFormats", "TBCSS", "OutputDataFormats", "BC");
     net = matlab2nnv(netonnx);
     net.OutputSize = numClasses;
