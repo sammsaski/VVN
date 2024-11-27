@@ -10,7 +10,8 @@ import vvn.checkplots
 
 if __name__ == "__main__":
     # get the figures dir
-    output_dir = os.path.join(os.getcwd(), 'figs')
+    root = os.path.dirname(os.getcwd())
+    output_dir = os.path.join(root, 'figs')
 
     # define the starting configuration 
     config = Config(

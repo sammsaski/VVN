@@ -17,7 +17,8 @@ and include an example of calling summarize somewhere else in the docs to show t
 
 if __name__ == "__main__":
     # get the results dir
-    output_dir = os.path.join(os.getcwd(), 'results')
+    root = os.path.dirname(os.getcwd())
+    output_dir = os.path.join(root, 'results')
 
     # define the starting configuration 
     config = Config(
