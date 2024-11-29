@@ -62,12 +62,10 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
     va = str_config.ver_algorithm
     length = str_config.sample_len
 
-    fp = os.path.join(output_dir, sgt, attack_type, dst, va, length)
+    fp = os.path.join(output_dir, dst, va, length)
 
     return fp if parent_only else os.path.join(fp, filename) + '.csv'
 
-# TODO: check that the output from the models is the exact same
-#       whether in python or matlab
 def get_correct_samples(modelpath, datapath) -> tuple[list[int], list[int]]:
     outputs = []
     for sample_len in ['4', '8', '16']:
@@ -114,45 +112,37 @@ def get_correct_samples(modelpath, datapath) -> tuple[list[int], list[int]]:
 
 def generate_indices(config) -> tuple[list[int], list[int]]:
     # unpack config settings
-    sample_gen_type = config.sample_gen_type
     class_size = config.class_size
 
-    # randomly generate indices of samples to verify from test set
-    if sample_gen_type == 'random':
+    # get the indices of all correctly classified samples
+    correct_outputs = get_correct_samples(PATH_TO_MODELS, PATH_TO_DATA)
 
-        # get the indices of all correctly classified samples
-        correct_outputs = get_correct_samples(PATH_TO_MODELS, PATH_TO_DATA)
+    # partition the correctly classified samples by class
+    indices = defaultdict(list, {value: [i for i in correct_outputs] for value in range(0, 43)})
 
-        # partition the correctly classified samples by class
-        indices = defaultdict(list, {value: [i for i in correct_outputs] for value in range(0, 43)})
+    # check that there are atleast 10 correctly classified samples for each class
+    if not all(len(lst) >= class_size for lst in indices.values()):
+        raise Exception("Not enough correctly classified samples for 'zoom_in'.")
 
-        # check that there are atleast 10 correctly classified samples for each class
-        if not all(len(lst) >= class_size for lst in indices.values()):
-            raise Exception("Not enough correctly classified samples for 'zoom_in'.")
+    # randomly sample 10 of the correctly classified samples per class
+    indices = [random.sample(indices[class_label], class_size) for class_label in indices.keys()]
 
-        # randomly sample 10 of the correctly classified samples per class
-        indices = [random.sample(indices[class_label], class_size) for class_label in indices.keys()]
+    # flatten the list before returning
+    indices = list(itertools.chain(*indices))
 
-        # flatten the list before returning
-        indices = list(itertools.chain(*indices))
+    # add 1 to all values of list because MATLAB uses 1-indexing
+    indices = [v + 1 for v in indices]
 
-        # add 1 to all values of list because MATLAB uses 1-indexing
-        indices = [v + 1 for v in indices]
+    if len(indices) < class_size * 10:
+        raise Exception("Not enough correctly classified samples.")
 
-        if len(indices) < class_size * 10:
-            raise Exception("Not enough correctly classified samples.")
+    print(f'Indices : {indices} \n')
 
-        print(f'Indices : {indices} \n')
+    # write the indices for the current experiment to its path (in this case it will be in random directory)
+    with open(os.path.join(os.getcwd(), 'results', 'random', 'gtsrb_indices.txt'), 'w') as f:
+        f.write(f'GTSRB Indices : {indices} \n')
 
-        # write the indices for the current experiment to its path (in this case it will be in random directory)
-        with open(os.path.join(os.getcwd(), 'results', 'random', 'gtsrb_indices.txt'), 'w') as f:
-            f.write(f'GTSRB Indices : {indices} \n')
-
-        return indices
-
-    # inorder generation of indices of samples to verify from test set 
-    else:
-        raise NotImplementedError("Inorder index generation has not been implemented yet. Please use 'random'.") 
+    return indices
 
 if __name__ == "__main__":
     pass 
