@@ -72,7 +72,7 @@ def run(config, indices) -> None:
     vp.prepare_filetree(config)
 
     # make sure matlab is started
-    eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH, GUROBI_PATH)
+    eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH)
 
     # start verification
     for sample_num, index in enumerate(indices):
@@ -80,10 +80,6 @@ def run(config, indices) -> None:
 
         # select epsilon
         for eps_index in range(1, len(epsilon) + 1):
-            # TODO: normalize naming convention for results files
-            # build the output file
-            # for naming convention, we will use the
-            # epsilon value for filename -- example filename : eps=1_255
             output_file = vp.build_output_filepath(config=config, filename=f'eps={eps_index}_255')
 
             # verify the sample with a specific epsilon value
@@ -144,11 +140,6 @@ def run_gtsrb(config, indices) -> None:
 
         # select epsilon
         for eps_index in range(1, len(epsilon) + 1):
-            # TODO: normalize naming convention for results files
-            # build the output file
-            # for naming convention, we will use the
-            # epsilon value for filename -- example filename : eps=1_255
-
             output_file = vgp.build_output_filepath(config=config, filename=f'eps={eps_index}_255')
 
             # skip if timeout was met at any point in the previous iterations
@@ -218,11 +209,6 @@ def run_stmnist(config, indices) -> None:
 
         # select epsilon
         for eps_index in range(1, len(epsilon) + 1):
-            # TODO: normalize naming convention for results files
-            # build the output file
-            # for naming convention, we will use the
-            # epsilon value for filename -- example filename : eps=1_255
-
             output_file = vsp.build_output_filepath(config=config, filename=f'eps={eps_index}_255')
 
             # skip if timeout was met at any point in the previous iterations
@@ -307,13 +293,12 @@ def summarize(output_file_dir, data_len):
 if __name__ == "__main__":
     # example config
     config = Config(
-        sample_gen_type='random',
         class_size=10,
         epsilon=[1/255, 2/255, 3/255],
         ds_type='zoom_in',
         sample_len=16,
         ver_algorithm='relax',
-        timeout=3600,
+        timeout=1800,
         output_dir=''
     )
 
