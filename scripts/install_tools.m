@@ -8,8 +8,10 @@ install;
 % Setup npy-matlab
 %
 cd /home/user/npy-matlab
-addpath('/home/user/npy-matlab/npy-matlb');
+addpath('/home/user/npy-matlab/npy-matlab');
 savepath;
+
+fprintf('\nFinished installing NNV + npy-matlab.\n');
 
 %
 % Running subset of experiments

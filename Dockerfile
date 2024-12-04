@@ -68,4 +68,18 @@ RUN git clone https://github.com/kwikteam/npy-matlab.git /home/user/npy-matlab
 COPY . /home/user/vvn
 # RUN git clone https://github.com/sammsaski/VVN.git /home/user/vvn
 
-CMD ["matlab", "-batch", "run('/home/user/vvn/scripts/install_tools.m')"]
+# NOTE: CLOSES THE CONTAINER AFTER CMD FINISHES
+CMD ["matlab", "-batch", "run('/home/user/vvn/scripts/install_tools.m')"] 
+
+# CMD ["/bin/bash", "-c", "matlab -batch \"run('/home/user/vvn/scripts/install_tools.m'); exit;\" && tail -f /dev/null"]
+# CMD ["/bin/bash", "-c", "matlab -batch \"run('/home/user/vvn/scripts/install_tools.m')\""]
+
+# RUN chmod +x /home/user/vvn/scripts/run_sample.sh
+# CMD ["matlab", "-batch", "run('/home/user/vvn/scripts/run_smoketest.m')"]
+
+# CMD [""]
+# ENTRYPOINT ["tail", "-f", "/dev/null"]
+
+# CMD ["tail", "-f", "/dev/null"]
+
+# ENTRYPOINT ["/bin/bash", "-c", "tail -f /dev/null"]
