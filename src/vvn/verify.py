@@ -2,6 +2,7 @@
 import csv
 import io
 import os
+import sys
 from typing import Tuple
 
 # third-party packages
@@ -291,40 +292,46 @@ def summarize(output_file_dir, data_len):
 
 
 if __name__ == "__main__":
-    # example config
-    config = Config(
-        class_size=10,
-        epsilon=[1/255, 2/255, 3/255],
-        ds_type='zoom_in',
-        sample_len=16,
-        ver_algorithm='relax',
-        timeout=1800,
-        output_dir=''
-    )
+    # for smoke test
+    dst = sys.argv[1]
+    veralg = sys.argv[2]
+    epsilon_index = sys.argv[3]
+    sample_len = sys.argv[4]
+    timeout = sys.argv[5]
+    index = sys.argv[6]
 
-    # run verification
-    run(config=config)
+    # verify command line arguments
+    if dst not in ['zoom_in', 'zoom_out', 'gtsrb', 'stmnist']:
+        raise error("Invalid dataset argument. Must be one of 'zoom_in', 'zoom_out', 'gtsrb' or 'stmnist'.")
+    
+    if veralg not in ['relax', 'approx']:
+        raise error("Invalid verification algorithm. Must be one of 'relax' or 'approx'.")
+    
+    if epsilon_index not in ['1', '2', '3']:
+        raise error("Invalid epsilon. Must be one of 1, 2, or 3.")
 
-    # update config
-    config.ds_type = 'zoom_out'
-    run(config=config)
+    if dst == 'stmnist':
+        if sample_len not in ['16', '32', '64']:
+            raise error("Invalid sample length for STMNIST. Must be one of 16, 32, 64.")
+    else:
+        if sample_len not in ['4', '8', '16']:
+            raise error("Invalid sample length for MNIST and GTSRB Video. Must be one of 4, 8, 16.")
 
+    # convert CL arguments to correct data types
+    epsilon_index = int(epsilon_index)
+    sample_len = int(sample_len)
+    index = int(index)
+    timeout = int(timeout)
 
+    # start matlab
+    eng = prepare_engine(NNV_PATH, NPY_MATLAB_PATH)
 
+    if dst == 'zoom_in' or dst == 'zoom_out':
+        res, t, met = verify(dst, sample_len, veralg, eng, index, epsilon_index, timeout)
+    elif dst == 'stmnist':
+        res, t, met = verify_stmnist(sample_len, veralg, eng, index, epsilon_index, timeout)
+    else:
+        res, t, met = verify_gtsrb(sample_len, veralg, eng, index, epsilon_index, timeout)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+   print(f'Smoke test on {dst}-{sample_len}f with {veralg} and e={epsilon_index}/255.') 
+   print(f'Res: {res}, Time: {t}, Met: {met}\n')

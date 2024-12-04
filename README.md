@@ -45,3 +45,19 @@ Don't forget to install the NNV toolbox and the npy-matlab toolbox before runnin
 ### requirements.txt
 
 Numpy could not be upgraded from 1.26.4 to 2.0.0 because of some incompatability with onnxruntime.
+
+### Docker things
+
+```
+docker build --platform linux/amd64 -t vvni -f Dockerfile .
+
+docker image inspect mathworks/matlab-deep-learning:r2024a
+
+docker image inspect --format '{{.Config.User}}' <image_name>
+```
+
+Boot up the docker image (from mathworks:r2024a) and figure out what the present working directory is (`pwd`). This should be `/home/matlab/Documents/MATLAB`--even though we've set `USER root`. I'm not sure if this is intended behavior? Should we be ending up in `root/matlab/Documents/MATLAB` as the pwd instead? The `/bin/run.sh` script, which is the decided entrypoint, errors out with `USER root`. This is because, at some point, it tries to `cd /root/Documents/MATLAB`, which fails as the directory doesn't exist (nothing exists in `/root/`).
+
+Try to diagnose these errors. Does it help if I just create a random `/root/Documents/MATLAB` with nothing in it? I can't leave out the `USER root` command because then we don't have root privileges (?) and the next commands fail.
+
+POTENTIAL FIX: copy all of the contents of `/home/matlab/` into `/root/`.
