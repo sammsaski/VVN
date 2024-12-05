@@ -6,17 +6,14 @@ from typing import List, Literal, Self
 @dataclass
 class Config:
     # Experimental settings
-    sample_gen_type: Literal['random', 'inorder']
-    class_size: int # 10 samples per class
-    # TODO: find a way to make sure that possible epsilon values is consistent between matlab + python
+    class_size: int # number of samples to verify per class
     epsilon: List # [1/255, 2/255, 3/255] 
-    timeout: int # 3600 (s)
+    timeout: int # 1800 (s)
     output_dir: str # /path/to/VVN/results 
 
     # Verification settings
-    ds_type: Literal['zoom_in', 'zoom_out', 'gtsrb'] # might need to change this to ZoomIn/ZoomOut
-    sample_len: Literal[4, 8, 16] # length of videos in number of frames
-    attack_type: Literal['single_frame', 'all_frames'] # whether we attack all frames or a subset
+    ds_type: Literal['zoom_in', 'zoom_out', 'gtsrb', 'stmnist'] 
+    sample_len: Literal[4, 8, 16, 32, 64] # length of videos in number of frames
     ver_algorithm: Literal['relax', 'approx'] # types of verification algorithms to use
 
     def update(self, **kwargs):

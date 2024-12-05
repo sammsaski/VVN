@@ -24,32 +24,28 @@ random.seed(42)
 def prepare_filetree(config: Config):
     # TODO: come up with a more flexible way to do this
     # create all directories for each type of experiment being run
-    for sgt in ['random', 'inorder']: 
-        for at in ['single_frame', 'all_frames']:
-            for dst in ['zoom_in', 'zoom_out']:
-                for va in ['relax', 'approx']:
-                    for length in ['4', '8', '16']:
-                        for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
-                            fp = build_output_filepath(config, eps_filename)
+    for dst in ['zoom_in', 'zoom_out']:
+        for va in ['relax', 'approx']:
+            for length in ['4', '8', '16']:
+                for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
+                    fp = build_output_filepath(config, eps_filename)
 
-                            # create the parent directories if they don't already exist
-                            os.makedirs(os.path.join(config.output_dir, sgt, at, dst, va, length), exist_ok=True)
+                    # create the parent directories if they don't already exist
+                    os.makedirs(os.path.join(config.output_dir, dst, va, length), exist_ok=True)
 
     # make the results files once we know all directories have been made
-    for sgt in ['random', 'inorder']:
-        for at in ['single_frame', 'all_frames']:
-            for dst in ['zoom_in', 'zoom_out']:
-                for va in ['relax', 'approx']:
-                    for length in ['4', '8', '16']:
-                        for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
-                            fp = build_output_filepath(config, eps_filename)
+    for dst in ['zoom_in', 'zoom_out']:
+        for va in ['relax', 'approx']:
+            for length in ['4', '8', '16']:
+                for eps_filename in [f'eps={e}_255' for e in range(1, 4)]:
+                    fp = build_output_filepath(config, eps_filename)
 
-                            # if the file doesn't exist yet, create it
-                            if not os.path.isfile(fp):
-                                with open(fp, 'w', newline='') as f:
-                                    # write CSV headers
-                                    writer = csv.writer(f)
-                                    writer.writerow(['Sample Number', 'Result', 'Time', 'Method'])
+                    # if the file doesn't exist yet, create it
+                    if not os.path.isfile(fp):
+                        with open(fp, 'w', newline='') as f:
+                            # write CSV headers
+                            writer = csv.writer(f)
+                            writer.writerow(['Sample Number', 'Result', 'Time', 'Method'])
 
 def build_output_filepath(config: Config, filename=None, parent_only=False):
     """
@@ -65,18 +61,14 @@ def build_output_filepath(config: Config, filename=None, parent_only=False):
 
     # get the values we need for building the output filepath
     output_dir = str_config.output_dir
-    sgt = str_config.sample_gen_type
-    attack_type = str_config.attack_type
     dst = str_config.ds_type
     va = str_config.ver_algorithm
     length = str_config.sample_len
 
-    fp = os.path.join(output_dir, sgt, attack_type, dst, va, length)
+    fp = os.path.join(output_dir, dst, va, length)
 
     return fp if parent_only else os.path.join(fp, filename) + '.csv'
 
-# TODO: check that the output from the models is the exact same
-#       whether in python or matlab
 def get_correct_samples(modelpath, datapath) -> tuple[list[int], list[int]]:
     zoom_in_outputs = []
     zoom_out_outputs = []
@@ -131,53 +123,45 @@ def get_correct_samples(modelpath, datapath) -> tuple[list[int], list[int]]:
 
 def generate_indices(config) -> tuple[list[int], list[int]]:
     # unpack config settings
-    sample_gen_type = config.sample_gen_type
     class_size = config.class_size
 
-    # randomly generate indices of samples to verify from test set
-    if sample_gen_type == 'random':
+    # get the indices of all correctly classified samples
+    correct_zoom_in, correct_zoom_out = get_correct_samples(PATH_TO_MODELS, PATH_TO_DATA)
 
-        # get the indices of all correctly classified samples
-        correct_zoom_in, correct_zoom_out = get_correct_samples(PATH_TO_MODELS, PATH_TO_DATA)
+    # partition the correctly classified samples by class
+    zoom_in_indices = defaultdict(list, {value: [i for i in correct_zoom_in] for value in range(0, 10)})
+    zoom_out_indices = defaultdict(list, {value: [i for i in correct_zoom_out] for value in range(0, 10)})
 
-        # partition the correctly classified samples by class
-        zoom_in_indices = defaultdict(list, {value: [i for i in correct_zoom_in] for value in range(0, 10)})
-        zoom_out_indices = defaultdict(list, {value: [i for i in correct_zoom_out] for value in range(0, 10)})
+    # check that there are atleast 10 correctly classified samples for each class
+    if not all(len(lst) >= class_size for lst in zoom_in_indices.values()):
+        raise Exception("Not enough correctly classified samples for 'zoom_in'.")
+    elif not all(len(lst) >= class_size for lst in zoom_out_indices.values()):
+        raise Exception("Not enough correctly classified samples for 'zoom_out'.")
 
-        # check that there are atleast 10 correctly classified samples for each class
-        if not all(len(lst) >= class_size for lst in zoom_in_indices.values()):
-            raise Exception("Not enough correctly classified samples for 'zoom_in'.")
-        elif not all(len(lst) >= class_size for lst in zoom_out_indices.values()):
-            raise Exception("Not enough correctly classified samples for 'zoom_out'.")
+    # randomly sample 10 of the correctly classified samples per class
+    zoom_in_indices = [random.sample(zoom_in_indices[class_label], class_size) for class_label in zoom_in_indices.keys()]
+    zoom_out_indices = [random.sample(zoom_out_indices[class_label], class_size) for class_label in zoom_out_indices.keys()]
 
-        # randomly sample 10 of the correctly classified samples per class
-        zoom_in_indices = [random.sample(zoom_in_indices[class_label], class_size) for class_label in zoom_in_indices.keys()]
-        zoom_out_indices = [random.sample(zoom_out_indices[class_label], class_size) for class_label in zoom_out_indices.keys()]
+    # flatten the list before returning
+    zoom_in_indices = list(itertools.chain(*zoom_in_indices))
+    zoom_out_indices = list(itertools.chain(*zoom_out_indices))
 
-        # flatten the list before returning
-        zoom_in_indices = list(itertools.chain(*zoom_in_indices))
-        zoom_out_indices = list(itertools.chain(*zoom_out_indices))
+    # add 1 to all values of list because MATLAB uses 1-indexing
+    zoom_in_indices = [v + 1 for v in zoom_in_indices]
+    zoom_out_indices = [v + 1 for v in zoom_out_indices]
 
-        # add 1 to all values of list because MATLAB uses 1-indexing
-        zoom_in_indices = [v + 1 for v in zoom_in_indices]
-        zoom_out_indices = [v + 1 for v in zoom_out_indices]
+    if len(zoom_in_indices) < class_size * 10 or len(zoom_out_indices) < class_size * 10:
+        raise Exception("Not enough correctly classified samples.")
 
-        if len(zoom_in_indices) < class_size * 10 or len(zoom_out_indices) < class_size * 10:
-            raise Exception("Not enough correctly classified samples.")
+    print(f'Zoom In Indices : {zoom_in_indices} \n')
+    print(f'Zoom Out Indices : {zoom_out_indices} \n')
 
-        print(f'Zoom In Indices : {zoom_in_indices} \n')
-        print(f'Zoom Out Indices : {zoom_out_indices} \n')
+    # write the indices for the current experiment to its path (in this case it will be in random directory)
+    with open(os.path.join(os.getcwd(), 'results', 'random', 'indices.txt'), 'w') as f:
+        f.write(f'Zoom In Indices : {zoom_in_indices} \n')
+        f.write(f'Zoom Out Indices : {zoom_out_indices} \n')
 
-        # write the indices for the current experiment to its path (in this case it will be in random directory)
-        with open(os.path.join(os.getcwd(), 'results', 'random', 'indices.txt'), 'w') as f:
-            f.write(f'Zoom In Indices : {zoom_in_indices} \n')
-            f.write(f'Zoom Out Indices : {zoom_out_indices} \n')
-
-        return zoom_in_indices, zoom_out_indices 
-
-    # inorder generation of indices of samples to verify from test set 
-    else:
-        raise NotImplementedError("Inorder index generation has not been implemented yet. Please use 'random'.") 
+    return zoom_in_indices, zoom_out_indices 
 
 if __name__ == "__main__":
     pass 
