@@ -333,5 +333,5 @@ if __name__ == "__main__":
     else:
         res, t, met = verify_gtsrb(sample_len, veralg, eng, index, epsilon_index, timeout)
 
-   print(f'Smoke test on {dst}-{sample_len}f with {veralg} and e={epsilon_index}/255.') 
-   print(f'Res: {res}, Time: {t}, Met: {met}\n')
+    print(f'Smoke test on {dst}-{sample_len}f with {veralg} and e={epsilon_index}/255.') 
+    print(f'Res: {res}, Time: {t}, Met: {met}\n')

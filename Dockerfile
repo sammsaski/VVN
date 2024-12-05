@@ -14,9 +14,10 @@ USER root
 RUN mv /home/matlab/* /root/
 
 # Install mpm dependencies.
+# changed python3 -> python3.11
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get -y install git python3 pip \
+    && apt-get -y install git python3.11 pip \
     && apt-get install --no-install-recommends --yes \
     wget \
     unzip \
@@ -67,6 +68,18 @@ RUN git clone https://github.com/kwikteam/npy-matlab.git /home/user/npy-matlab
 # Copy files and directory structure to working directory
 COPY . /home/user/vvn
 # RUN git clone https://github.com/sammsaski/VVN.git /home/user/vvn
+
+# Add path to MATLAB for the MATLAB Engine for Python to find
+ENV LD_LIBRARY_PATH=/opt/matlab/R2024a/bin/glnxa64:$LD_LIBRARY_PATH
+# ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/
+
+# for matlabengine
+# RUN sudo apt-get install libpython3.10
+
+# Install requirements
+# UNCOMMENT THIS ONCE I FIGURE OUT WHERE MATLAB GETS INSTALLED
+# RUN pip install -r /home/user/vvn/requirements.txt 
+# RUN pip install -e /home/user/vvn
 
 # NOTE: CLOSES THE CONTAINER AFTER CMD FINISHES
 CMD ["matlab", "-batch", "run('/home/user/vvn/scripts/install_tools.m')"] 

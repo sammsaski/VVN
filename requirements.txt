@@ -17,4 +17,4 @@ pyparsing==3.1.2
 python-dateutil==2.9.0.post0
 six==1.16.0
 sympy==1.12.1
--e git+ssh://git@github.com/sammsaski/VVN.git@45f8615ed58a0674ed92c0fcfcb88143f759fffb#egg=vvn&subdirectory=src
+# -e git+ssh://git@github.com/sammsaski/VVN.git@45f8615ed58a0674ed92c0fcfcb88143f759fffb#egg=vvn&subdirectory=src
